@@ -27,6 +27,7 @@ def main():
     parser.add_argument('--dry_run', action='store_true', help='Run the script in dry run mode')
     parser.add_argument('--info', action='store_true', help='Show info logging level')
     parser.add_argument('--debug', action='store_true', help='Show debug logging level')
+    parser.add_argument('--cleanup', action='store_false', default=True, help='Cleanup the repo after backup')
     
     args = parser.parse_args()
 
@@ -58,6 +59,30 @@ def main():
 
     # Initialize Repo if necessary
     init_repo(args.repo, args.pw_file)
+
+    # Run the backup
+    data_backup(
+        repo=args.repo,
+        pw_file=args.pw_file,
+        paths=args.paths,
+        include_files=args.include_files,
+        exclude_files=args.exclude_files,
+        dry_run=args.dry_run
+    )
+
+    # Clean the repo
+    if args.cleanup:
+        clean_repo(
+            repo=args.repo,
+            pw_file=args.pw_file,
+            ret_days=args.ret_days,
+            ret_weeks=args.ret_weeks,
+            ret_months=args.ret_months,
+            ret_years=args.ret_years,
+            dry_run=args.dry_run
+        )
+    else:
+        logging.info('Skipping cleanup of the repo.')
 
     
 
@@ -105,20 +130,22 @@ def data_backup(
     # Set repo parameters
     restic.repository = repo
     restic.password_file = pw_file
-    
-    # TODO Check if repo exists
 
     # Run Restic Backup
-    result = restic.backup(
-        paths=paths,
-        include_files=include_files, 
-        exclude_files=exclude_files, 
-        skip_if_unchanged=True, 
-        dry_run=dry_run
-    )
-
-    # TODO Log results of the backup
-    # TODO Send notifications of backup results
+    try:
+        result = restic.backup(
+            paths=paths,
+            include_files=include_files, 
+            exclude_files=exclude_files, 
+            skip_if_unchanged=True, 
+            dry_run=dry_run
+        )
+    except restic.errors.ResticFailedError as e:
+        logging.exception(f'Backup for {repo} failed.')
+        # TODO add email notification for backup failure
+    else:
+        logging.info(f'Backup for {repo} completed successfully. {result}')
+        # TODO add email notification for backup success
 
 def clean_repo(repo: Path | str,pw_file: Path | str, ret_days: int, ret_weeks: int, ret_months: int, ret_years: int, dry_run: bool = False):
     """ Clean the repo by removing old snapshots.
@@ -137,16 +164,21 @@ def clean_repo(repo: Path | str,pw_file: Path | str, ret_days: int, ret_weeks: i
     restic.password_file = pw_file
 
     # Remove old snapshots
-    result = restic.forget(
-        prune=True,
-        keep_daily=ret_days,
-        keep_weekly=ret_weeks,
-        keep_monthly=ret_months,
-        keep_yearly=ret_years,
-        dry_run=dry_run
-    )
-
-    # TODO Log results of the cleanup
+    try:
+        result = restic.forget(
+            prune=True,
+            keep_daily=ret_days,
+            keep_weekly=ret_weeks,
+            keep_monthly=ret_months,
+            keep_yearly=ret_years,
+            dry_run=dry_run
+        )
+    except restic.errors.ResticFailedError as e:
+        logging.exception(f'Cleanup for {repo} failed.')
+        # TODO add email notification for cleanup failure
+    else:
+        logging.info(f'Cleanup for {repo} completed successfully. {result}')
+        # TODO add email notification for cleanup success
 
 if __name__ == '__main__':
     main()

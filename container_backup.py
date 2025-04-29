@@ -62,20 +62,22 @@ def main():
             stop_container(container)
         except subprocess.CalledProcessError as e:
             pass
-        else:
-            # Run the backup
-            data_backup(
-                repo=args.repo,
-                pw_file=args.pw_file,
-                paths=[container],
-                exclude_files=args.exclude_files,
-                dry_run=args.dry_run
-            )
+            # TODO Improve error handling for container stop
+        
+        # Run the backup
+        data_backup(
+            repo=args.repo,
+            pw_file=args.pw_file,
+            paths=[container],
+            exclude_files=args.exclude_files,
+            dry_run=args.dry_run
+        )
 
-            try:
-                start_container(container)
-            except subprocess.CalledProcessError as e:
-                pass
+        try:
+            start_container(container)
+        except subprocess.CalledProcessError as e:
+            pass
+            # TODO Improve error handling for container starting
 
     # Clean the repo
     if not args.no_cleanup:

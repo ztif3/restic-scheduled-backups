@@ -18,7 +18,6 @@ def main():
     parser.add_argument('repo', type=str, help='repo path for the backup')
     parser.add_argument('pw_file', type=str, help='Password file for the restic repo')
     parser.add_argument('paths', type=str, nargs='+', help='Paths to backup')
-    parser.add_argument('--include_files', type=str, nargs='*', help='List of files with paths to include in the backup')
     parser.add_argument('--exclude_files',type=str, nargs='*', help='List of files with paths to exclude in the backup')
     parser.add_argument('--ret_days', type=int, help='Number of days to keep the backup', default=14)
     parser.add_argument('--ret_weeks', type=int, help='Number of weeks to keep the backup', default=16)
@@ -27,7 +26,7 @@ def main():
     parser.add_argument('--dry_run', action='store_true', help='Run the script in dry run mode')
     parser.add_argument('--info', action='store_true', help='Show info logging level')
     parser.add_argument('--debug', action='store_true', help='Show debug logging level')
-    parser.add_argument('--cleanup', action='store_false', default=True, help='Cleanup the repo after backup')
+    parser.add_argument('--no_cleanup', action='store_true', default=False, help='Cleanup the repo after backup')
     
     args = parser.parse_args()
 
@@ -65,13 +64,12 @@ def main():
         repo=args.repo,
         pw_file=args.pw_file,
         paths=args.paths,
-        include_files=args.include_files,
         exclude_files=args.exclude_files,
         dry_run=args.dry_run
     )
 
     # Clean the repo
-    if args.cleanup:
+    if not args.no_cleanup:
         clean_repo(
             repo=args.repo,
             pw_file=args.pw_file,
@@ -123,7 +121,6 @@ def data_backup(
         repo (Path | str): path to the restic repo
         pw_file (Path | str): password file for the restic repo
         paths (list[Path | str]): paths to backup
-        include_files (list[Path | str]): List of files with paths to include in the backup
         exclude_files (list[Path | str]): List of files with paths to exclude in the backup
         dry_run (bool): if True, run the script in dry run mode
     """
@@ -133,11 +130,10 @@ def data_backup(
 
     # Run Restic Backup
     try:
+        logging.info(f'Running backup for {repo}...')
         result = restic.backup(
             paths=paths,
-            include_files=include_files, 
             exclude_files=exclude_files, 
-            skip_if_unchanged=True, 
             dry_run=dry_run
         )
     except restic.errors.ResticFailedError as e:
@@ -165,6 +161,7 @@ def clean_repo(repo: Path | str,pw_file: Path | str, ret_days: int, ret_weeks: i
 
     # Remove old snapshots
     try:
+        logging.info(f'Running cleanup for {repo}...')
         result = restic.forget(
             prune=True,
             keep_daily=ret_days,

@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 
 import argparse
+import logging
+from logging.config import dictConfig
 from pathlib import Path
+from pprint import pprint
+
 import restic
+
 
 def main():
     """ Main function to run the data backup script. """
@@ -20,29 +25,64 @@ def main():
     parser.add_argument('--ret_months', type=int, help='Number of months to keep the backup', default=18)
     parser.add_argument('--ret_years', type=int, help='Number of years to keep the backup', default=3)
     parser.add_argument('--dry_run', action='store_true', help='Run the script in dry run mode')
-
+    parser.add_argument('--info', action='store_true', help='Show info logging level')
+    parser.add_argument('--debug', action='store_true', help='Show debug logging level')
+    
     args = parser.parse_args()
 
-    print(args.src)
+    # Configure logging
+    log_level = logging.WARN
+    if args.debug:
+        log_level = logging.DEBUG
+    elif args.info:
+        log_level = logging.INFO    
+
+    dictConfig(
+        {
+            "version": 1,
+            "formatters": {
+                "default": {
+                    "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
+                }
+            },
+            "handlers": {
+                "console": {
+                    "class": "logging.StreamHandler",
+                    "stream": "ext://sys.stdout",
+                    "formatter": "default",
+                }
+            },
+            "root": {"level": log_level, "handlers": ["console"]},
+        }
+    )
+
+    # Initialize Repo if necessary
+    init_repo(args.repo, args.pw_file)
 
     
 
-def init_repo(repo: Path | str,pw_file: Path | str, dry_run: bool = False):
+def init_repo(repo: Path | str, pw_file: Path | str):
     """ Initialize the repo if it does not already exist.
 
     Args:
         repo (Path | str): path to the restic repo
         pw_file (Path | str): password file for the restic repo
-        dry_run (bool): if True, run the script in dry run mode
     """
     
     # Set repo parameters
-    restic.repo = repo
+    restic.repository = repo
     restic.password_file = pw_file
 
-    # TODO Initialize repo if it does not already exist
+    # Initialize repo if it does not already exist
+    try:
+        restic.cat.config()
+    except restic.errors.ResticFailedError as e:
+        # Initialize repo
+        results = restic.init()
+        logging.warning(f'Repo {repo} created. {results}')
+    else:
+        logging.info(f'Repo {repo} already exists.')
 
-    # TODO Log results of the initialization
     
 def data_backup(
         repo: Path | str, 
@@ -63,7 +103,7 @@ def data_backup(
         dry_run (bool): if True, run the script in dry run mode
     """
     # Set repo parameters
-    restic.repo = repo
+    restic.repository = repo
     restic.password_file = pw_file
     
     # TODO Check if repo exists
@@ -93,7 +133,7 @@ def clean_repo(repo: Path | str,pw_file: Path | str, ret_days: int, ret_weeks: i
         dry_run (bool): if True, run the script in dry run mode
     """
     # Set repo parameters
-    restic.repo = repo
+    restic.repository = repo
     restic.password_file = pw_file
 
     # Remove old snapshots

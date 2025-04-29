@@ -135,7 +135,8 @@ def stop_container(container:str):
         raise
     else:
         if output.returncode == 0:
-            logging.info(f'Container {container} stopped successfully. \n{output.stdout.decode()}')
+            logging.info(f'Container {container} stopped successfully.')
+            logging.debug(f'Results from stopping container {container}. \n{output.stdout.decode()}')
         else:
             logging.error(f'Failed to stop container {container}. \n{output.stderr.decode()}')
             raise subprocess.CalledProcessError(output.returncode, output.args, output.stdout, output.stderr) 
@@ -157,6 +158,7 @@ def start_container(container:str):
     else:
         if output.returncode == 0:
             logging.info(f'Container {container} started successfully. \n{output.stdout.decode()}')
+            logging.debug(f'Results from starting container {container}. \n{output.stdout.decode()}')
         else:
             logging.error(f'Failed to start container {container}. \n{output.stderr.decode()}')
             raise subprocess.CalledProcessError(output.returncode, output.args, output.stdout, output.stderr) 

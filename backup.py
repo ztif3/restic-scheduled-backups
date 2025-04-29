@@ -88,11 +88,11 @@ def copy_repo(src_repo:Path | str, dst_repo:Path | str, pw_file: Path | str):
         )
 
     except restic.errors.ResticFailedError as e:
-        logging.exception(f'Copy for {repo} failed.')
+        logging.exception(f'Copy from {src_repo} to {dst_repo} failed.')
         # TODO add email notification for copy failure
     else:
-        logging.info(f'Copy for {repo} completed successfully.')
-        logging.debug(f'Copy result for {repo}\n{result}')
+        logging.info(f'Copy from {src_repo} to {dst_repo} completed successfully.')
+        logging.debug(f'Copy result from {src_repo} to {dst_repo}\n{result}')
         # TODO add email notification for copy success
 
 def clean_repo(repo: Path | str,pw_file: Path | str, ret_days: int, ret_weeks: int, ret_months: int, ret_years: int, dry_run: bool = False):

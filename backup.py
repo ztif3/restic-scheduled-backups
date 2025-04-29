@@ -35,7 +35,6 @@ def data_backup(
         repo: Path | str, 
         pw_file: Path | str, 
         paths: list[Path|str],
-        include_files: list[Path|str]=[], 
         exclude_files: list[Path|str]=[], 
         dry_run: bool = False
     ):
@@ -67,6 +66,34 @@ def data_backup(
         logging.info(f'Backup for {repo} completed successfully. {result}')
         logging.debug(f'Backup result for {repo}\n{result}')
         # TODO add email notification for backup success
+
+def copy_repo(src_repo:Path | str, dst_repo:Path | str, pw_file: Path | str):
+    """ Copy the repo to a secondary location.
+
+    Args:
+        src_repo (Path | str): path to the source repo
+        dst_repo (Path | str): path for the destination repo
+        pw_file (Path | str): password file for the restic repo
+    """
+    # Set repo parameters
+    restic.repository = dst_repo          
+    restic.password_file = pw_file
+
+    # Copy repo to secondary location
+    try:
+        logging.info(f'Copying {src_repo} to {dst_repo}...')
+        result = restic.copy(
+            from_repo=src_repo,
+            from_password_file=pw_file,
+        )
+
+    except restic.errors.ResticFailedError as e:
+        logging.exception(f'Copy for {repo} failed.')
+        # TODO add email notification for copy failure
+    else:
+        logging.info(f'Copy for {repo} completed successfully.')
+        logging.debug(f'Copy result for {repo}\n{result}')
+        # TODO add email notification for copy success
 
 def clean_repo(repo: Path | str,pw_file: Path | str, ret_days: int, ret_weeks: int, ret_months: int, ret_years: int, dry_run: bool = False):
     """ Clean the repo by removing old snapshots.

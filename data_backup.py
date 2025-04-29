@@ -11,14 +11,14 @@ def main():
     parser = argparse.ArgumentParser(description='Run data backup script.')
     
     parser.add_argument('repo', type=str, help='repo path for the backup')
-    parser.add_argument('pw_file', type=str, help='Password file for the restic repo')
-    parser.add_argument('paths', type=str, nargs='+', help='Paths to backup')
-    parser.add_argument('include_files', type=str, nargs='*', help='List of files with paths to include in the backup')
-    parser.add_argument('exclude_files',type=str, nargs='*', help='List of files with paths to exclude in the backup')
-    parser.add_argument('ret_days', type=int, help='Number of days to keep the backup', default=14)
-    parser.add_argument('ret_weeks', type=int, help='Number of weeks to keep the backup', default=16)
-    parser.add_argument('ret_months', type=int, help='Number of months to keep the backup', default=18)
-    parser.add_argument('ret_years', type=int, help='Number of years to keep the backup', default=3)
+    parser.add_argument('--pw_file', type=str, help='Password file for the restic repo')
+    parser.add_argument('--paths', type=str, nargs='+', help='Paths to backup')
+    parser.add_argument('--include_files', type=str, nargs='*', help='List of files with paths to include in the backup')
+    parser.add_argument('--exclude_files',type=str, nargs='*', help='List of files with paths to exclude in the backup')
+    parser.add_argument('--ret_days', type=int, help='Number of days to keep the backup', default=14)
+    parser.add_argument('--ret_weeks', type=int, help='Number of weeks to keep the backup', default=16)
+    parser.add_argument('--ret_months', type=int, help='Number of months to keep the backup', default=18)
+    parser.add_argument('--ret_years', type=int, help='Number of years to keep the backup', default=3)
 
     args = parser.parse_args()
 

@@ -24,8 +24,9 @@ def init_repo(repo: Path | str, pw_file: Path | str):
         restic.cat.config()
     except restic.errors.ResticFailedError as e:
         # Initialize repo
-        results = restic.init()
-        logging.warning(f'Repo {repo} created. {results}')
+        result = restic.init()
+        logging.warning(f'Repo {repo} created.')
+        logging.debug(f'Init result for {repo}\n{result}')
     else:
         logging.info(f'Repo {repo} already exists.')
 
@@ -64,6 +65,7 @@ def data_backup(
         # TODO add email notification for backup failure
     else:
         logging.info(f'Backup for {repo} completed successfully. {result}')
+        logging.debug(f'Backup result for {repo}\n{result}')
         # TODO add email notification for backup success
 
 def clean_repo(repo: Path | str,pw_file: Path | str, ret_days: int, ret_weeks: int, ret_months: int, ret_years: int, dry_run: bool = False):
@@ -97,5 +99,6 @@ def clean_repo(repo: Path | str,pw_file: Path | str, ret_days: int, ret_weeks: i
         logging.exception(f'Cleanup for {repo} failed.')
         # TODO add email notification for cleanup failure
     else:
-        logging.info(f'Cleanup for {repo} completed successfully. {result}')
+        logging.info(f'Cleanup for {repo} completed successfully.')
+        logging.debug(f'Cleanup result for {repo}\n{result}')
         # TODO add email notification for cleanup success

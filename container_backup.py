@@ -100,11 +100,17 @@ def stop_container(container:str):
 
     logging.info(f'Stopping container {container}...')
     try:
-        output=subprocess.run(['docker-compose', 'down'], check=True, capture_output=True, cwd=container)
+        output=subprocess.run(['docker-compose', 'down'], capture_output=True, cwd=container)
         logging.info(f'Container {container} stopped. {output.stdout.decode()}')
     except subprocess.CalledProcessError as e:
         logging.error(f'Failed to stop container {container}: {e}')
         raise
+    else:
+        if output.returncode == 0:
+            logging.info(f'Container {container} stopped successfully. \n{output.stdout.decode()}')
+        else:
+            logging.error(f'Failed to stop container {container}. \n{output.stderr.decode()}')
+            raise subprocess.CalledProcessError(output.returncode, output.args, output.stdout, output.stderr) 
 
 def start_container(container:str):
     """ Function to start a container.
@@ -120,6 +126,12 @@ def start_container(container:str):
     except subprocess.CalledProcessError as e:
         logging.error(f'Failed to start container {container}: {e}')
         raise
+    else:
+        if output.returncode == 0:
+            logging.info(f'Container {container} started successfully. \n{output.stdout.decode()}')
+        else:
+            logging.error(f'Failed to start container {container}. \n{output.stderr.decode()}')
+            raise subprocess.CalledProcessError(output.returncode, output.args, output.stdout, output.stderr) 
 
 if __name__ == '__main__':
     main()

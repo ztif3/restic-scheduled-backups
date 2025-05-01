@@ -14,7 +14,7 @@ def main():
     parser.add_argument('repo', type=str, help='repo path for the backup')
     parser.add_argument('pw_file', type=str, help='Password file for the restic repo')
     parser.add_argument('--paths', type=str, nargs='+', help='Paths to include in backup')
-    parser.add_argument('--secondary_repos', type=str, nargs='*', help='list of paths for secondary repos')
+    parser.add_argument('--secondary_repos', type=str, nargs='*', help='list of paths for secondary repos', default=[])
     parser.add_argument('--exclude_files',type=str, nargs='*', help='List of files with paths to exclude in the backup')
     parser.add_argument('--ret_days', type=int, help='Number of days to keep the backup', default=14)
     parser.add_argument('--ret_weeks', type=int, help='Number of weeks to keep the backup', default=16)
@@ -52,55 +52,57 @@ def main():
             "root": {"level": log_level, "handlers": ["console"]},
         }
     )
+    if args.paths is not None:
+        # Initialize Repo if necessary
+        init_repo(args.repo, args.pw_file)
 
-    # Initialize Repo if necessary
-    init_repo(args.repo, args.pw_file)
-
-    # Run the backup
-    data_backup(
-        repo=args.repo,
-        pw_file=args.pw_file,
-        paths=args.paths,
-        exclude_files=args.exclude_files,
-        dry_run=args.dry_run
-    )
-
-    # Clean the repo
-    if not args.no_cleanup:
-        clean_repo(
+        # Run the backup
+        data_backup(
             repo=args.repo,
             pw_file=args.pw_file,
-            ret_days=args.ret_days,
-            ret_weeks=args.ret_weeks,
-            ret_months=args.ret_months,
-            ret_years=args.ret_years,
+            paths=args.paths,
+            exclude_files=args.exclude_files,
             dry_run=args.dry_run
         )
+
+        # Clean the repo
+        if not args.no_cleanup:
+            clean_repo(
+                repo=args.repo,
+                pw_file=args.pw_file,
+                ret_days=args.ret_days,
+                ret_weeks=args.ret_weeks,
+                ret_months=args.ret_months,
+                ret_years=args.ret_years,
+                dry_run=args.dry_run
+            )
+        else:
+            logging.info('Skipping cleanup of the repo.')
+
+        # Copy the repo to secondary locations
+        for secondary_repo in args.secondary_repos:
+            # Initialize secondary repo if necessary
+            init_repo(secondary_repo, args.pw_file)
+
+            # Copy primary repo to secondary repo
+            copy_repo(
+                src_repo=args.repo,
+                dst_repo=secondary_repo,
+                pw_file=args.pw_file
+            )
+
+            # Cleanup secondary repo
+            clean_repo(
+                repo=secondary_repo,
+                pw_file=args.pw_file,
+                ret_days=args.ret_days,
+                ret_weeks=args.ret_weeks,
+                ret_months=args.ret_months,
+                ret_years=args.ret_years,
+                dry_run=args.dry_run
+            )
     else:
-        logging.info('Skipping cleanup of the repo.')
-
-    # Copy the repo to secondary locations
-    for secondary_repo in args.secondary_repos:
-        # Initialize secondary repo if necessary
-        init_repo(secondary_repo, args.pw_file)
-
-        # Copy primary repo to secondary repo
-        copy_repo(
-            src_repo=args.repo,
-            dst_repo=secondary_repo,
-            pw_file=args.pw_file
-        )
-
-        # Cleanup secondary repo
-        clean_repo(
-            repo=secondary_repo,
-            pw_file=args.pw_file,
-            ret_days=args.ret_days,
-            ret_weeks=args.ret_weeks,
-            ret_months=args.ret_months,
-            ret_years=args.ret_years,
-            dry_run=args.dry_run
-        )
+        logging.warning('No Paths provided - Backup Skipped')
 
 if __name__ == '__main__':
     main()

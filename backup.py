@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 
 import logging
-import subprocess
-from pathlib import Path
+from os import PathLike
 
 import restic
 
     
 
-def init_repo(repo: Path | str, pw_file: Path | str):
+def init_repo(repo: PathLike, pw_file: PathLike):
     """ Initialize the repo if it does not already exist.
 
     Args:
-        repo (Path | str): path to the restic repo
-        pw_file (Path | str): password file for the restic repo
+        repo (PathLike): path to the restic repo
+        pw_file (PathLike): password file for the restic repo
     """
     
     # Set repo parameters
@@ -33,19 +32,19 @@ def init_repo(repo: Path | str, pw_file: Path | str):
 
     
 def data_backup(
-        repo: Path | str, 
-        pw_file: Path | str, 
-        paths: list[Path|str],
-        exclude_files: list[Path|str]=[], 
+        repo: PathLike, 
+        pw_file: PathLike, 
+        paths: list[PathLike],
+        exclude_files: list[PathLike]=[], 
         dry_run: bool = False
     ):
     """ Function to run the data backup script.
 
     Args:
-        repo (Path | str): path to the restic repo
-        pw_file (Path | str): password file for the restic repo
-        paths (list[Path | str]): paths to backup
-        exclude_files (list[Path | str]): List of files with paths to exclude in the backup
+        repo (PathLike): path to the restic repo
+        pw_file (PathLike): password file for the restic repo
+        paths (list[PathLike]): paths to backup
+        exclude_files (list[PathLike]): List of files with paths to exclude in the backup
         dry_run (bool): if True, run the script in dry run mode
     """
     # Set repo parameters
@@ -68,13 +67,13 @@ def data_backup(
         logging.debug(f'Backup result for {repo}\n{result}')
         # TODO add email notification for backup success
 
-def copy_repo(src_repo:Path | str, dst_repo:Path | str, pw_file: Path | str):
+def copy_repo(src_repo:PathLike, dst_repo:PathLike, pw_file: PathLike):
     """ Copy the repo to a secondary location.
 
     Args:
-        src_repo (Path | str): path to the source repo
-        dst_repo (Path | str): path for the destination repo
-        pw_file (Path | str): password file for the restic repo
+        src_repo (PathLike): path to the source repo
+        dst_repo (PathLike): path for the destination repo
+        pw_file (PathLike): password file for the restic repo
     """
     # Set repo parameters
     restic.repository = dst_repo          
@@ -96,12 +95,12 @@ def copy_repo(src_repo:Path | str, dst_repo:Path | str, pw_file: Path | str):
         logging.debug(f'Copy result from {src_repo} to {dst_repo}\n{result}')
         # TODO add email notification for copy success
 
-def clean_repo(repo: Path | str,pw_file: Path | str, ret_days: int, ret_weeks: int, ret_months: int, ret_years: int, dry_run: bool = False):
+def clean_repo(repo: PathLike,pw_file: PathLike, ret_days: int, ret_weeks: int, ret_months: int, ret_years: int, dry_run: bool = False):
     """ Clean the repo by removing old snapshots.
 
     Args:
-        repo (Path | str): path to the restic repo
-        pw_file (Path | str): password file for the restic repo
+        repo (PathLike): path to the restic repo
+        pw_file (PathLike): password file for the restic repo
         ret_days (int): Number of days to keep the backup
         ret_weeks (int): Number of weeks to keep the backup
         ret_months (int): Number of months to keep the backup

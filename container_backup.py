@@ -4,7 +4,8 @@ import logging
 from logging.config import dictConfig
 import subprocess
 
-from backup import copy_repo, init_repo, data_backup, clean_repo, start_container, stop_container
+from backup import copy_repo, init_repo, data_backup, clean_repo
+from containers import start_container, stop_container
 
 def main():
     """ Main function to run the data backup script. """

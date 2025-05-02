@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import argparse
 import logging
-import subprocess
 from logging.config import dictConfig
+import subprocess
 
-from backup import copy_repo, init_repo, data_backup, clean_repo
+from backup import copy_repo, init_repo, data_backup, clean_repo, start_container, stop_container
 
 def main():
     """ Main function to run the data backup script. """
@@ -122,53 +122,6 @@ def main():
                 pass
     else:
         logging.warning('No Containers provided - Backup Skipped')
-        
-
-    
-
-def stop_container(container:str):
-    """ Function to stop a container.
-
-    Args:
-        container (str): path to the container to stop
-    """
-
-    logging.info(f'Stopping container {container}...')
-    try:
-        output=subprocess.run(['docker-compose', 'down'], capture_output=True, cwd=container)
-        logging.info(f'Container {container} stopped. {output.stdout.decode()}')
-    except subprocess.CalledProcessError as e:
-        logging.error(f'Failed to stop container {container}: {e}')
-        raise
-    else:
-        if output.returncode == 0:
-            logging.info(f'Container {container} stopped successfully.')
-            logging.debug(f'Results from stopping container {container}. \n{output.stdout.decode()}')
-        else:
-            logging.error(f'Failed to stop container {container}. \n{output.stderr.decode()}')
-            raise subprocess.CalledProcessError(output.returncode, output.args, output.stdout, output.stderr) 
-
-def start_container(container:str):
-    """ Function to start a container.
-
-    Args:
-        container (str): path to the container to start
-    """
-
-    logging.info(f'Starting container {container}...')
-    try:
-        output = subprocess.run(['docker-compose', 'up', '-d'], check=True, capture_output=True, cwd=container)
-        logging.info(f'Container {container} started. {output.stdout.decode()}')
-    except subprocess.CalledProcessError as e:
-        logging.error(f'Failed to start container {container}: {e}')
-        raise
-    else:
-        if output.returncode == 0:
-            logging.info(f'Container {container} started successfully. \n{output.stdout.decode()}')
-            logging.debug(f'Results from starting container {container}. \n{output.stdout.decode()}')
-        else:
-            logging.error(f'Failed to start container {container}. \n{output.stderr.decode()}')
-            raise subprocess.CalledProcessError(output.returncode, output.args, output.stdout, output.stderr) 
 
 if __name__ == '__main__':
     main()

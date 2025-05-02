@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import subprocess
 from pathlib import Path
 
 import restic
@@ -129,3 +130,55 @@ def clean_repo(repo: Path | str,pw_file: Path | str, ret_days: int, ret_weeks: i
         logging.info(f'Cleanup for {repo} completed successfully.')
         logging.debug(f'Cleanup result for {repo}\n{result}')
         # TODO add email notification for cleanup success
+
+
+# TODO Add check method
+
+
+        
+
+    
+
+def stop_container(container:str):
+    """ Function to stop a container.
+
+    Args:
+        container (str): path to the container to stop
+    """
+
+    logging.info(f'Stopping container {container}...')
+    try:
+        output=subprocess.run(['docker-compose', 'down'], capture_output=True, cwd=container)
+        logging.info(f'Container {container} stopped. {output.stdout.decode()}')
+    except subprocess.CalledProcessError as e:
+        logging.error(f'Failed to stop container {container}: {e}')
+        raise
+    else:
+        if output.returncode == 0:
+            logging.info(f'Container {container} stopped successfully.')
+            logging.debug(f'Results from stopping container {container}. \n{output.stdout.decode()}')
+        else:
+            logging.error(f'Failed to stop container {container}. \n{output.stderr.decode()}')
+            raise subprocess.CalledProcessError(output.returncode, output.args, output.stdout, output.stderr) 
+
+def start_container(container:str):
+    """ Function to start a container.
+
+    Args:
+        container (str): path to the container to start
+    """
+
+    logging.info(f'Starting container {container}...')
+    try:
+        output = subprocess.run(['docker-compose', 'up', '-d'], check=True, capture_output=True, cwd=container)
+        logging.info(f'Container {container} started. {output.stdout.decode()}')
+    except subprocess.CalledProcessError as e:
+        logging.error(f'Failed to start container {container}: {e}')
+        raise
+    else:
+        if output.returncode == 0:
+            logging.info(f'Container {container} started successfully. \n{output.stdout.decode()}')
+            logging.debug(f'Results from starting container {container}. \n{output.stdout.decode()}')
+        else:
+            logging.error(f'Failed to start container {container}. \n{output.stderr.decode()}')
+            raise subprocess.CalledProcessError(output.returncode, output.args, output.stdout, output.stderr) 

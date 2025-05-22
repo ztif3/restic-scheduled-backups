@@ -242,7 +242,7 @@ def main():
     
     # Configure logging
     if args.debug:
-        logging.setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.DEBUG)
 
     # Get config path
     if args.config_file is not None:

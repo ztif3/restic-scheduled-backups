@@ -30,7 +30,7 @@ def main():
 
     # Configure logging
     if args.debug:
-        logger.setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.DEBUG)
 
     if args.paths is not None:
         # Initialize Repo if necessary

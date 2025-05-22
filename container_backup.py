@@ -32,7 +32,7 @@ def main():
     
     # Configure logging
     if args.debug:
-        logging.setLevel(logging.DEBUG)
+        logging.getLogger().setLevel(logging.DEBUG)
 
 
     if args.containers is not None:

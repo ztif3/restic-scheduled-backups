@@ -22,11 +22,9 @@ logging_config = {
             "backupCount": 7
         }
     },
-    "loggers": {
-        " ": {
-            "level": "INFO", 
-            "handlers": ["console", "file"]
-        }
+    "root": {
+        "level": "INFO", 
+        "handlers": ["console", "file"]
     }
 }
 

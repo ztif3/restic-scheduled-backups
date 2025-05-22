@@ -6,6 +6,7 @@ import subprocess
 
 from backup import copy_repo, init_repo, data_backup, clean_repo
 from containers import start_container, stop_container
+import common
 
 logger = logging.getLogger(__name__)
 

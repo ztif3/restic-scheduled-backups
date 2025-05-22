@@ -18,6 +18,9 @@ from system import list_mounted_partitions
 
 process_list = []
 
+logger = logging.getLogger(__name__)
+
+
 def get_config_backups(config_path: PathLike) -> list[dict]:
     """ Gets a list of backup tasks from the config file
 
@@ -48,27 +51,27 @@ def get_config_backups(config_path: PathLike) -> list[dict]:
                 # TODO Validate default period
                 def_period = config['default']['period']
             else:
-                logging.debug(f'No default period in "{config_path}"')
+                logger.debug(f'No default period in "{config_path}"')
 
             if 'repo_roots' in config['default']:
                 # TODO Validate default repo roots
                 def_repo_roots = config['default']['repo_roots']
             else:
-                logging.debug(f'No default repo_roots in "{config_path}"')
+                logger.debug(f'No default repo_roots in "{config_path}"')
 
             if 'retention' in config['default']:
                 # TODO Validate default retention policy
                 def_retention = config['default']['repo_roots']
             else:
-                logging.debug(f'No default retention in "{config_path}"')
+                logger.debug(f'No default retention in "{config_path}"')
         else:
-            logging.debug(f'No default settings exist in "{config_path}"')
+            logger.debug(f'No default settings exist in "{config_path}"')
 
         # Get backups
         if 'backups' in config:
             backups = config['backups']
         else:
-            logging.warning(f'No Backups present in "{config_path}"')
+            logger.warning(f'No Backups present in "{config_path}"')
 
         # Ensure all backups have repo_roots and retention settings
         for backup in backups:
@@ -224,7 +227,7 @@ def run_backup(backup:dict):
             )
 
     else:
-        logging.error(f'No local repositories available for backup root {backup['root']}')
+        logger.error(f'No local repositories available for backup root {backup['root']}')
 
 
 def main():
@@ -233,39 +236,14 @@ def main():
     parser = argparse.ArgumentParser(description='Run data backup script.')
 
     parser.add_argument('config_file', type=PathLike, help='Configuration JSON File')
-    parser.add_argument('--info', action='store_true', help='Show info logging level')
     parser.add_argument('--debug', action='store_true', help='Show debug logging level')
 
     args = parser.parse_args()
-
     
     # Configure logging
-    log_level = logging.WARN
     if args.debug:
-        log_level = logging.DEBUG
-    elif args.info:
-        log_level = logging.INFO    
+        logging.setLevel(logging.DEBUG)
 
-    dictConfig(
-        {
-            "version": 1,
-            "formatters": {
-                "default": {
-                    "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
-                }
-            },
-            "handlers": {
-                "console": {
-                    "class": "logging.StreamHandler",
-                    "stream": "ext://sys.stdout",
-                    "formatter": "default",
-                }
-            },
-            "root": {"level": log_level, "handlers": ["console"]},
-        }
-    )
-
-    
     # Get config path
     if args.config_file is not None:
         config_path = Path(args.config_file)
@@ -296,20 +274,20 @@ def main():
                         proc = Process(target=run_backup, args=(backup, ))
                         proc_list.append(proc)
                         schedule.every(frequency).day.at(run_time).do(start_backup, proc=proc)
-                        logging.info(f'Scheduling a backup for {backup['root']} every {frequency} days at {run_time}')
+                        logger.info(f'Scheduling a backup for {backup['root']} every {frequency} days at {run_time}')
                     case _:
-                        logging.warning(f'Unsupported period_type {period_type} found, backup task for root {backup['root']}')
+                        logger.warning(f'Unsupported period_type {period_type} found, backup task for root {backup['root']}')
 
             # Run Schedule tasks
-            logging.info('Starting scheduler loop')
+            logger.info('Starting scheduler loop')
             while True: # TODO Provide end conditions
                 schedule.run_pending()
                 time.sleep(1)
         else:
-            logging.error(f'Config file "{config_path}" does not exist.')
+            logger.error(f'Config file "{config_path}" does not exist.')
 
     else:
-        logging.error('No config file provided.')
+        logger.error('No config file provided.')
 
 
 if __name__ == '__main__':

@@ -3,6 +3,8 @@ import logging
 import subprocess
 from pathlib import Path
 
+logger = logging.getLogger(__name__)
+
 def list_mounted_partitions() -> dict[str:list[str]]:
     """ Generates a list of mounted partitions with a list of their mountpoints
 
@@ -12,11 +14,11 @@ def list_mounted_partitions() -> dict[str:list[str]]:
     """
 
     mount_list:dict[str:list[str]] = {}
-    logging.info('Listing all mounted partitions')
+    logger.info('Listing all mounted partitions')
     try:
         output = subprocess.run(['lsblk','-J','-o','+LABEL'], capture_output=True)
     except subprocess.CalledProcessError as e:
-        logging.error('Unable to get list of all mounted partitions')
+        logger.error('Unable to get list of all mounted partitions')
         raise
     finally:
         output_dict = json.loads(output)
@@ -44,17 +46,17 @@ def list_mounted_partitions() -> dict[str:list[str]]:
                         if 'mountpoints' in child:
                             mount_list[child_name] = child['mountpoints']
 
-                            logging.debug(f'{len(mount_list[child_name])} mount points found for child "{child_name}" for block device "{device_name}"')
+                            logger.debug(f'{len(mount_list[child_name])} mount points found for child "{child_name}" for block device "{device_name}"')
 
                         else:
-                            logging.debug(f'No Mount points found in child "{child_name}" for block device "{device_name}"')
+                            logger.debug(f'No Mount points found in child "{child_name}" for block device "{device_name}"')
 
 
                 else:
                     
-                    logging.debug(f'No children found in block device "{device_name}"')
+                    logger.debug(f'No children found in block device "{device_name}"')
         else:
-            logging.error('no block devices found in lsblk output')
+            logger.error('no block devices found in lsblk output')
 
     return mount_list
 

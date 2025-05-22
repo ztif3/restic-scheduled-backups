@@ -5,6 +5,8 @@ from logging.config import dictConfig
 
 from backup import copy_repo, init_repo, data_backup, clean_repo
 
+logger = logging.getLogger(__name__)
+
 def main():
     """ Main function to run the data backup script. """
 
@@ -21,37 +23,15 @@ def main():
     parser.add_argument('--ret_months', type=int, help='Number of months to keep the backup', default=18)
     parser.add_argument('--ret_years', type=int, help='Number of years to keep the backup', default=3)
     parser.add_argument('--dry_run', action='store_true', help='Run the script in dry run mode')
-    parser.add_argument('--info', action='store_true', help='Show info logging level')
     parser.add_argument('--debug', action='store_true', help='Show debug logging level')
     parser.add_argument('--no_cleanup', action='store_true', default=False, help='Cleanup the repo after backup')
     
     args = parser.parse_args()
 
     # Configure logging
-    log_level = logging.WARN
     if args.debug:
-        log_level = logging.DEBUG
-    elif args.info:
-        log_level = logging.INFO    
+        logger.setLevel(logging.DEBUG)
 
-    dictConfig(
-        {
-            "version": 1,
-            "formatters": {
-                "default": {
-                    "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
-                }
-            },
-            "handlers": {
-                "console": {
-                    "class": "logging.StreamHandler",
-                    "stream": "ext://sys.stdout",
-                    "formatter": "default",
-                }
-            },
-            "root": {"level": log_level, "handlers": ["console"]},
-        }
-    )
     if args.paths is not None:
         # Initialize Repo if necessary
         init_repo(args.repo, args.pw_file)
@@ -77,7 +57,7 @@ def main():
                 dry_run=args.dry_run
             )
         else:
-            logging.info('Skipping cleanup of the repo.')
+            logger.info('Skipping cleanup of the repo.')
 
         # Copy the repo to secondary locations
         for secondary_repo in args.secondary_repos:
@@ -102,7 +82,7 @@ def main():
                 dry_run=args.dry_run
             )
     else:
-        logging.warning('No Paths provided - Backup Skipped')
+        logger.warning('No Paths provided - Backup Skipped')
 
 if __name__ == '__main__':
     main()

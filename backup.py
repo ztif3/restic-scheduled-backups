@@ -2,18 +2,20 @@
 
 import logging
 from os import PathLike
+from pathlib import Path
 
 import restic
+import restic.errors
 
 import common
 
 logger = logging.getLogger(__name__)
 
-def init_repo(repo: PathLike, pw_file: PathLike):
+def init_repo(repo: PathLike|str, pw_file: PathLike):
     """ Initialize the repo if it does not already exist.
 
     Args:
-        repo (PathLike): path to the restic repo
+        repo (PathLike|str): path to the restic repo
         pw_file (PathLike): password file for the restic repo
     """
     
@@ -38,16 +40,16 @@ def init_repo(repo: PathLike, pw_file: PathLike):
 
     
 def data_backup(
-        repo: PathLike, 
+        repo: PathLike|str, 
         pw_file: PathLike, 
-        paths: list[PathLike],
+        paths: list[PathLike|Path],
         exclude_files: list[PathLike]=[], 
         dry_run: bool = False
     ):
     """ Function to run the data backup script.
 
     Args:
-        repo (PathLike): path to the restic repo
+        repo (PathLike|str): path to the restic repo
         pw_file (PathLike): password file for the restic repo
         paths (list[PathLike]): paths to backup
         exclude_files (list[PathLike]): List of files with paths to exclude in the backup
@@ -73,12 +75,12 @@ def data_backup(
         logger.debug(f'Backup result for {repo}\n{result}')
         # TODO add email notification for backup success
 
-def copy_repo(src_repo:PathLike, dst_repo:PathLike, pw_file: PathLike):
+def copy_repo(src_repo:PathLike|str, dst_repo:PathLike|str, pw_file: PathLike):
     """ Copy the repo to a secondary location.
 
     Args:
-        src_repo (PathLike): path to the source repo
-        dst_repo (PathLike): path for the destination repo
+        src_repo (PathLike|str): path to the source repo
+        dst_repo (PathLike|str): path for the destination repo
         pw_file (PathLike): password file for the restic repo
     """
     # Set repo parameters
@@ -101,11 +103,11 @@ def copy_repo(src_repo:PathLike, dst_repo:PathLike, pw_file: PathLike):
         logger.debug(f'Copy result from {src_repo} to {dst_repo}\n{result}')
         # TODO add email notification for copy success
 
-def clean_repo(repo: PathLike,pw_file: PathLike, ret_days: int, ret_weeks: int, ret_months: int, ret_years: int, dry_run: bool = False):
+def clean_repo(repo: PathLike|str, pw_file: PathLike, ret_days: int, ret_weeks: int, ret_months: int, ret_years: int, dry_run: bool = False):
     """ Clean the repo by removing old snapshots.
 
     Args:
-        repo (PathLike): path to the restic repo
+        repo (PathLike|str): path to the restic repo
         pw_file (PathLike): password file for the restic repo
         ret_days (int): Number of days to keep the backup
         ret_weeks (int): Number of weeks to keep the backup

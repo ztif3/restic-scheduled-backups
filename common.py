@@ -1,33 +1,35 @@
 import logging
 from logging.config import dictConfig
 
-def setup_logging():
-    """ Sets up logging """
-    dictConfig(
-        {
-            "version": 1,
-            "formatters": {
-                "default": {
-                    "format": "[%(asctime)s] %(levelname)s in %(module)s:%(lineno)d: %(message)s",
-                }
-            },
-            "handlers": {
-                "console": {
-                    "class": "logging.StreamHandler",
-                    "stream": "ext://sys.stdout",
-                    "formatter": "default",
-                },
-                "file": {
-                    "class": "logging.handlers.TimedRotatingFileHandler",
-                    "filename": "log",
-                    "when":"midnight",
-                    "interval": 1,
-                    "backupCount": 7
-                }
-            },
-            "root": {
-                "level": "INFO", 
-                "handlers": ["console", "file"]
+print(__name__)
+
+dictConfig(
+    {
+        "version": 1,
+        "formatters": {
+            "default": {
+                "style": "{",
+                "format": "[{asctime}] - {levelname} - {filename}:{lineno:d}: {message}",
             }
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+                "formatter": "default",
+            },
+            "file": {
+                "class": "logging.handlers.TimedRotatingFileHandler",
+                "filename": "log",
+                "formatter": "default",
+                "when":"midnight",
+                "interval": 1,
+                "backupCount": 7
+            }
+        },
+        "root": {
+            "level": "DEBUG", 
+            "handlers": ["console", "file"]
         }
-    )
+    }
+)

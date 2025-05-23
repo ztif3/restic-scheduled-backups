@@ -4,9 +4,9 @@ import logging
 from logging.config import dictConfig
 
 from backup import copy_repo, init_repo, data_backup, clean_repo
-from common import setup_logging
 
-setup_logging()
+import common
+
 logger = logging.getLogger(__name__)
 
 def main():

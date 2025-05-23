@@ -5,6 +5,8 @@ from os import PathLike
 
 import restic
 
+import common
+
 logger = logging.getLogger(__name__)
 
 def init_repo(repo: PathLike, pw_file: PathLike):

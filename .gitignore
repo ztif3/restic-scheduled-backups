@@ -1,2 +1,4 @@
 .venv
 drive_list.json
+__pycache__
+log

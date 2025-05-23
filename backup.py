@@ -28,9 +28,9 @@ def init_repo(repo: PathLike, pw_file: PathLike):
             result = restic.init()
         except restic.errors.ResticFailedError as e:
             logger.error(f'Unable to initialize repo {repo}')
-
-        logger.warning(f'Repo {repo} created.')
-        logger.debug(f'Init result for {repo}\n{result}')
+        else:
+            logger.warning(f'Repo {repo} created.')
+            logger.debug(f'Init result for {repo}\n{result}')
     else:
         logger.info(f'Repo {repo} already exists.')
 

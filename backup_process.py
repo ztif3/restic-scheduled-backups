@@ -12,9 +12,11 @@ from multiprocessing import Process
 
 from urllib.parse import urlparse, ParseResult
 import time
+from pydantic import ValidationError
 import schedule
 
 from backup import clean_repo, copy_repo, data_backup, init_repo
+from config_validation import BackupConfig
 from containers import start_container, stop_container
 from system import *
 
@@ -359,19 +361,7 @@ class BackupTask:
             self.retention_period.years
         )
 
-def validate_config(config: dict) -> None:
-    """ Validate the configuration dictionary for correctness.
-
-    Args:
-        config (dict): config dictionary
-
-    Errors:
-        
-    """
-    # TODO Validate config dictionary
-    pass
-
-def create_backup_tasks(config: dict) -> list[BackupTask]:
+def create_backup_tasks(config: BackupConfig) -> list[BackupTask]:
     """ Get list of backup tasks from config dictionary
 
     Args:
@@ -408,15 +398,12 @@ def main():
         if config_path.exists():
             # Load configuration from JSON file
             with open(config_path, 'r') as f:
-                # Load JSON configuration from file
-                config = json.load(f)
-
-                # Validate the configuration
+                # Load the configuration
                 try:
-                    validate_config(config)
-                except ValueError as e:
+                    config = BackupConfig(**json.load(f))
+                except ValidationError as e:
                     logger.exception(f'Invalid configuration')
-                    return
+                    raise
                 
                 # Get backup tasks based on the configuration
                 tasks = create_backup_tasks(config)

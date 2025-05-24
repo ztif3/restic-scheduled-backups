@@ -16,7 +16,7 @@ from pydantic import ValidationError
 import schedule
 
 from backup import clean_repo, copy_repo, data_backup, init_repo
-from config_validation import BackupConfig
+from config_def import BackupConfig
 from containers import start_container, stop_container
 from system import *
 

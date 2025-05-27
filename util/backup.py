@@ -3,6 +3,7 @@
 import logging
 from os import PathLike
 from pathlib import Path
+from pprint import pformat
 
 import restic
 import restic.errors
@@ -71,8 +72,8 @@ def data_backup(
         logger.exception(f'Backup for {repo} failed.')
         # TODO add email notification for backup failure
     else:
-        logger.info(f'Backup for {repo} completed successfully. {result}')
-        logger.debug(f'Backup result for {repo}\n{result}')
+        logger.info(f'Backup for {repo} completed successfully.')
+        logger.debug(f'Backup result for {repo}\n{pformat(result)}')
         # TODO add email notification for backup success
 
 def copy_repo(src_repo:PathLike|str, dst_repo:PathLike|str, pw_file: PathLike):
@@ -100,7 +101,7 @@ def copy_repo(src_repo:PathLike|str, dst_repo:PathLike|str, pw_file: PathLike):
         # TODO add email notification for copy failure
     else:
         logger.info(f'Copy from {src_repo} to {dst_repo} completed successfully.')
-        logger.debug(f'Copy result from {src_repo} to {dst_repo}\n{result}')
+        logger.debug(f'Copy result from {src_repo} to {dst_repo}\n{pformat(result)}')
         # TODO add email notification for copy success
 
 def clean_repo(repo: PathLike|str, pw_file: PathLike, ret_days: int, ret_weeks: int, ret_months: int, ret_years: int, dry_run: bool = False):
@@ -135,7 +136,7 @@ def clean_repo(repo: PathLike|str, pw_file: PathLike, ret_days: int, ret_weeks: 
         # TODO add email notification for cleanup failure
     else:
         logger.info(f'Cleanup for {repo} completed successfully.')
-        logger.debug(f'Cleanup result for {repo}\n{result}')
+        logger.debug(f'Cleanup result for {repo}\n{pformat(result)}')
         # TODO add email notification for cleanup success
 
 

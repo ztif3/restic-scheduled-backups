@@ -158,13 +158,19 @@ class BackupTask:
                             src_path = self.root_dir / path
 
                             # If container task type, stop container before running backup
-                            stop_container(src_path)
-
+                            try:
+                                stop_container(src_path)
+                            except subprocess.CalledProcessError as e:
+                                logger.exception(f'Error while stopping container at path {src_path}')
+                        
                             # Run backup to primary repo
                             data_backup(primary_repo_path, self.pw_file, [src_path])
 
                             # If container task type, start container after running backup
-                            start_container(src_path)
+                            try:
+                                start_container(src_path)
+                            except subprocess.CalledProcessError as e:
+                                logger.exception(f'Error while starting container at path {src_path}')
                     
                 # Clean primary repo
                 clean_repo(

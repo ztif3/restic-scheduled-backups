@@ -45,7 +45,8 @@ class BackupTask:
                  update_period: PeriodConfig = PeriodConfig(type=PeriodType.DAILY),
                  retention_period: RetentionConfig = RetentionConfig(),
                  cloud_repos: list[CloudRepoConfig] = [],
-                 task_type: 'BackupTask.Type' = Type.STANDARD
+                 task_type: 'BackupTask.Type' = Type.STANDARD,
+                 no_cloud: bool = False,
     ):
         """ Constructor
 
@@ -60,6 +61,7 @@ class BackupTask:
             retention_period (RetentionPeriod, optional): retention period for the data to be backed up. Defaults to RetentionPeriod().
             cloud_repos (list[CloudDevice], optional): list of cloud repo roots. Defaults to [].
             task_type (BackupTask.Type, optional): type of the backup task. Defaults to Type.STANDARD.
+            no_cloud (bool, optional): whether to slip the cloud backup. Defaults to False.
         """
 
         if not isinstance(root_dir, Path):
@@ -77,7 +79,10 @@ class BackupTask:
         self.retention_period = retention_period
         self.cloud_repos = cloud_repos
         self.task_type = task_type
+        self.no_cloud = no_cloud
+
         self.scheduled = False
+
 
         
         # Queue task
@@ -120,8 +125,9 @@ class BackupTask:
                     for repo in self.local_devices[1:]:
                         self.local_backup(primary_repo_path, repo, mount_list)
 
-                for repo in self.cloud_repos:
-                    self.cloud_backup(primary_repo_path, repo)        
+                if not self.no_cloud:
+                    for repo in self.cloud_repos:
+                        self.cloud_backup(primary_repo_path, repo)        
         except:
             logger.exception("Unable to run backup")
 

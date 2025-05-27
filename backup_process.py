@@ -38,11 +38,12 @@ logger = logging.getLogger(__name__)
 
 task_queue = Queue()
 
-def create_backup_tasks(config: BackupConfig) -> list[BackupTask]:
+def create_backup_tasks(config: BackupConfig, no_cloud: bool=False) -> list[BackupTask]:
     """ Get list of backup tasks from config dictionary
 
     Args:
         config (dict): config dictionary
+        no_cloud (bool): If True, skip cloud backups. Defaults to False.
 
     Returns:
         list[BackupTask]: list of backup tasks
@@ -98,6 +99,10 @@ def main():
                         help='Configuration JSON File')
     parser.add_argument('--debug', action='store_true',
                         help='Show debug logging level')
+    parser.add_argument('--immediate', action='store_true', default=False,
+                        help='Run backup immediately instead of waiting for scheduled time')
+    parser.add_argument('--no_cloud', action='store_true', default=False,
+                        help='Do not perform cloud backups')
 
     args = parser.parse_args()
 
@@ -126,10 +131,15 @@ def main():
                     logger.exception(f'Failed to create backup tasks')
                     raise
                 
-                # run scheduler
-                while True:
-                    schedule.run_pending()
-                    time.sleep(1)
+                if args.immediate:
+                    # Run backup tasks
+                    for task in tasks:
+                        task.run()
+                else:
+                    # run scheduler
+                    while True:
+                        schedule.run_pending()
+                        time.sleep(1)
         else:
             logger.error(f'Config file "{config_path}" does not exist.')
 

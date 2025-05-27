@@ -90,6 +90,11 @@ class DefaultConfig(BaseModel):
     cloud_repos: Optional[list[CloudRepoConfig]] = None
     retention: Optional[RetentionConfig] = None
 
+class NtfyConfig(BaseModel):
+    topic_url: str
+    token: str
+
 class BackupConfig(BaseModel):
+    ntfy: Optional[NtfyConfig] = None
     default: Optional[DefaultConfig] = None
     backups: dict[str, BackupTaskConfig]

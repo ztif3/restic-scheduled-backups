@@ -16,6 +16,7 @@ from pydantic import ValidationError
 import schedule
 
 from config_def import *
+from util.ntfy import NtfyPriorityLevel, ntfy_message
 from util.system import *
 from tasks import task_queue
 from tasks.backup_task import BackupTask
@@ -86,7 +87,8 @@ def create_backup_tasks(config: BackupConfig, no_cloud: bool=False) -> list[Back
             retention_period=retention,
             cloud_repos=cloud_repos,
             task_type = task_config.type or BackupType.STANDARD, 
-            no_cloud=no_cloud
+            no_cloud=no_cloud,
+            ntfy_config=config.ntfy
         )
 
         tasks.append(task)
@@ -132,6 +134,9 @@ def main():
                     tasks = create_backup_tasks(config, args.no_cloud)
                 except:
                     logger.exception(f'Failed to create backup tasks')
+                    
+                    if config.ntfy is not None:
+                        ntfy_message(config.ntfy, "Backup Failed", f"Unable to load tasks", NtfyPriorityLevel.HIGH)
                     raise
                 
                 if args.immediate:

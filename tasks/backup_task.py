@@ -11,6 +11,7 @@ import schedule
 from util.backup import clean_repo, copy_repo, data_backup, init_repo
 from config_def import *
 from util.containers import start_container, stop_container
+from util.ntfy import NtfyPriorityLevel, ntfy_message
 from util.system import *
 
 from tasks import task_queue
@@ -32,6 +33,7 @@ class BackupTask:
                  cloud_repos: list[CloudRepoConfig] = [],
                  task_type: BackupType = BackupType.STANDARD,
                  no_cloud: bool = False,
+                 ntfy_config: Optional[NtfyConfig] = None,
     ):
         """ Constructor
 
@@ -65,6 +67,7 @@ class BackupTask:
         self.cloud_repos = cloud_repos
         self.task_type = task_type
         self.no_cloud = no_cloud
+        self.ntfy_config = ntfy_config
 
         self.scheduled = False
 
@@ -96,25 +99,39 @@ class BackupTask:
         try:
             if len(self.local_devices) > 0:
                 # Get primary repo
-                primary_repo = self.local_devices[0]
+                primary_repo = None
 
                 for repo in self.local_devices:
                     if repo.primary:
                         primary_repo = repo
                         break
+                    
+                if primary_repo is not None:
+                    primary_repo_path = self.primary_backup(primary_repo, mount_list)
+            
+                    # Copy backup to other local repos
+                    if len(self.local_devices) > 1:
+                        for repo in self.local_devices[1:]:
+                            self.local_backup(primary_repo_path, repo, mount_list)
 
-                primary_repo_path = self.primary_backup(primary_repo, mount_list)
-        
-                # Copy backup to other local repos
-                if len(self.local_devices) > 1:
-                    for repo in self.local_devices[1:]:
-                        self.local_backup(primary_repo_path, repo, mount_list)
+                    if not self.no_cloud:
+                        for repo in self.cloud_repos:
+                            self.cloud_backup(primary_repo_path, repo)   
 
-                if not self.no_cloud:
-                    for repo in self.cloud_repos:
-                        self.cloud_backup(primary_repo_path, repo)        
+                    if self.ntfy_config is not None:
+                        ntfy_message(self.ntfy_config, "Backup Complete", f"Backup completed for {self.name}", NtfyPriorityLevel.LOW)
+                else:
+                    if self.ntfy_config is not None:
+                        ntfy_message(self.ntfy_config, "Backup Failed", f"No primary device found for {self.name}", NtfyPriorityLevel.HIGH)
+            else:
+                
+                    if self.ntfy_config is not None:
+                        ntfy_message(self.ntfy_config, "Backup Failed", f"No local devices found for {self.name}", NtfyPriorityLevel.HIGH)
         except:
             logger.exception("Unable to run backup")
+            
+            if self.ntfy_config is not None:
+                ntfy_message(self.ntfy_config, "Backup Failed", f"Error occurred during backup for {self.name}", NtfyPriorityLevel.HIGH)
 
         
         logger.info(f"Finished task {self.name}")

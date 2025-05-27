@@ -3,14 +3,11 @@ import argparse
 from enum import Enum
 import logging
 
-from json import load
 from os import PathLike
-import os
 from pathlib import Path
-from subprocess import CalledProcessError
 from multiprocessing import Process, Queue
 
-from urllib.parse import urlparse, ParseResult
+from urllib.parse import ParseResult
 import time
 from pydantic import ValidationError
 import schedule

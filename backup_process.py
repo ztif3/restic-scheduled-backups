@@ -380,6 +380,8 @@ def main():
                         help='Configuration JSON File')
     parser.add_argument('--debug', action='store_true',
                         help='Show debug logging level')
+    parser.add_argument('--immediate', action='store_true', default=False, help='Runs backup immediately instead of starting the scheduler')
+    parser.add_argument('--no_cloud', action='store_true', default=False, help='Disables cloud backups')
 
     args = parser.parse_args()
 
@@ -408,10 +410,15 @@ def main():
                     logger.exception(f'Failed to create backup tasks')
                     raise
                 
-                # run scheduler
-                while True:
-                    schedule.run_pending()
-                    time.sleep(1)
+                if args.immediate:
+                    # Run all tasks
+                    for task in tasks:
+                        task.run()
+                else:
+                    # run scheduler
+                    while True:
+                        schedule.run_pending()
+                        time.sleep(1)
         else:
             logger.error(f'Config file "{config_path}" does not exist.')
 

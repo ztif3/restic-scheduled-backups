@@ -3,9 +3,16 @@ import argparse
 from enum import Enum
 import logging
 
+from json import load
 from os import PathLike
+import os
 from pathlib import Path
+from subprocess import CalledProcessError
+from multiprocessing import Process, Queue
 
+from urllib.parse import urlparse, ParseResult
+import time
+from pydantic import ValidationError
 import schedule
 
 from backup import clean_repo, copy_repo, data_backup, init_repo
@@ -13,11 +20,62 @@ from config_def import *
 from containers import start_container, stop_container
 from system import *
 
-from tasks import task_queue
+
+
+def run_backups(tasks: list['BackupTask']):
+    """ Run backups for each task
+    Args:
+        tasks (list[BackupTask]): list of backup tasks
+    """
+    while True:
+        task = task_queue.get()
+        task.run()
+
+update_process = Process(target=run_backups)
 
 import common
 
 logger = logging.getLogger(__name__)
+
+task_queue = Queue()
+
+class LocalDevice:
+    """ Stores information about a local device """
+
+    def __init__(self, name: str, dev_id: str):
+        """ Initializes local device with a name and list of mountpoints
+
+        Args:
+            name (str): device name
+            dev_id (str): device name
+        """
+        self.name = name
+        self.dev_id = dev_id
+
+
+class CloudDevice:
+    """ Determines a cloud device    """
+
+    class Type(str, Enum):
+        S3_COMPATIBLE = "s3-compatible"
+
+        def __str__(self) -> str:
+            return self.value
+            
+        @staticmethod
+        def from_str(value: str) -> 'CloudDevice.Type':
+            for e in CloudDevice.Type:
+                if e.value.lower() == value.lower():
+                    return e
+            raise ValueError(f"Invalid type {value}")
+
+    def __init__(self, name: str, type: str, path: ParseResult, key_id: str, key: str):
+        self.name = name
+        self.type = type
+        self.path = path
+        self.key_id = key_id
+        self.key = key
+
 
 class BackupTask:
     """ Represents a single backup task """
@@ -29,8 +87,8 @@ class BackupTask:
             return self.value
             
         @staticmethod
-        def from_str(value: str) -> CloudType:
-            for e in CloudType:
+        def from_str(value: str) -> 'CloudDevice.Type':
+            for e in CloudDevice.Type:
                 if e.value.lower() == value.lower():
                     return e
             raise ValueError(f"Invalid type {value}")
@@ -77,6 +135,7 @@ class BackupTask:
         self.retention_period = retention_period
         self.cloud_repos = cloud_repos
         self.task_type = task_type
+        self.proc = Process(target=self.run)
         self.scheduled = False
 
         
@@ -260,3 +319,112 @@ class BackupTask:
             self.retention_period.months, 
             self.retention_period.years
         )
+
+def create_backup_tasks(config: BackupConfig) -> list[BackupTask]:
+    """ Get list of backup tasks from config dictionary
+
+    Args:
+        config (dict): config dictionary
+
+    Returns:
+        list[BackupTask]: list of backup tasks
+    """
+    def_period = None
+    def_local = None
+    def_cloud = None
+    def_retention = None
+    
+    if config.default is not None:
+        def_period = config.default.period
+        def_local = config.default.local_devices
+        def_cloud = config.default.cloud_repos
+        def_retention = config.default.retention
+    
+    tasks = []
+
+    for name, task_config in config.backups.items():
+        period = task_config.period or def_period
+        local_devices = task_config.local_devices or def_local
+        cloud_repos = task_config.cloud_repos or def_cloud or []
+        retention = task_config.retention or def_retention
+
+        # Verify backup task has all required parameters
+        if period is None:
+            raise ValueError(f"Backup task {name} has no period defined")
+        if retention is None:
+            raise ValueError(f"Backup task {name} has no retention defined")
+        if local_devices is None:
+            raise ValueError(f"Backup task {name} has no local devices defined")
+
+        task = BackupTask(
+            name = name,
+            local_devices= local_devices,
+            repo_name = task_config.repo,
+            root_dir= task_config.root, 
+            pw_file= task_config.pw_file,
+            paths=task_config.paths,
+            update_period=period,
+            retention_period=retention,
+            cloud_repos=cloud_repos
+        )
+
+        tasks.append(task)
+    return []
+
+def main():
+    """  Main method for starting the backup process """
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Run data backup script.')
+
+    parser.add_argument('config_file', type=PathLike,
+                        help='Configuration JSON File')
+    parser.add_argument('--debug', action='store_true',
+                        help='Show debug logging level')
+    parser.add_argument('--immediate', action='store_true', default=False, help='Runs backup immediately instead of starting the scheduler')
+    parser.add_argument('--no_cloud', action='store_true', default=False, help='Disables cloud backups')
+
+    args = parser.parse_args()
+
+    # Configure logging
+    if args.debug:
+        logging.getLogger().setLevel(logging.DEBUG)
+
+    # Get config path
+    if args.config_file is not None:
+        config_path = Path(args.config_file)
+
+        if config_path.exists():
+            # Load configuration from JSON file
+            with open(config_path, 'r') as f:
+                # Load the configuration
+                try:
+                    config = BackupConfig(**json.load(f))
+                except ValidationError as e:
+                    logger.exception(f'Invalid configuration')
+                    raise
+                
+                # Get backup tasks based on the configuration
+                try:
+                    tasks = create_backup_tasks(config)
+                except:
+                    logger.exception(f'Failed to create backup tasks')
+                    raise
+                
+                if args.immediate:
+                    # Run all tasks
+                    for task in tasks:
+                        task.run()
+                else:
+                    # run scheduler
+                    while True:
+                        schedule.run_pending()
+                        time.sleep(1)
+        else:
+            logger.error(f'Config file "{config_path}" does not exist.')
+
+    else:
+        logger.error('No config file provided.')
+
+
+if __name__ == '__main__':
+    main()

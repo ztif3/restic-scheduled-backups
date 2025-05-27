@@ -88,14 +88,15 @@ def create_backup_tasks(config: BackupConfig, no_cloud: bool=False) -> list[Back
         )
 
         tasks.append(task)
-    return []
+        
+    return tasks
 
 def main():
     """  Main method for starting the backup process """
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Run data backup script.')
 
-    parser.add_argument('config_file', type=PathLike,
+    parser.add_argument('config_file', type=str,
                         help='Configuration JSON File')
     parser.add_argument('--debug', action='store_true',
                         help='Show debug logging level')

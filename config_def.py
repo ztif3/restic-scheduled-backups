@@ -67,11 +67,6 @@ class CloudRepoConfig(BaseModel):
         
         return f"{prefix}{self.path}"
 
-
-class ReposRootsConfig(BaseModel):
-    local_devices: list[LocalDeviceConfig]
-    cloud: list[CloudRepoConfig]
-
 class RetentionConfig(BaseModel):
     days: int = 14
     weeks: int = 16

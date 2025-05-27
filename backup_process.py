@@ -84,11 +84,13 @@ def create_backup_tasks(config: BackupConfig, no_cloud: bool=False) -> list[Back
             paths=task_config.paths,
             update_period=period,
             retention_period=retention,
-            cloud_repos=cloud_repos
+            cloud_repos=cloud_repos,
+            task_type = task_config.type or BackupType.STANDARD, 
+            no_cloud=no_cloud
         )
 
         tasks.append(task)
-        
+
     return tasks
 
 def main():

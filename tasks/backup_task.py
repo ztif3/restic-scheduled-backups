@@ -20,21 +20,6 @@ import common
 logger = logging.getLogger(__name__)
 
 class BackupTask:
-    """ Represents a single backup task """
-    class Type(str, Enum):
-        STANDARD="standard"
-        CONTAINER="container"
-
-        def __str__(self) -> str:
-            return self.value
-            
-        @staticmethod
-        def from_str(value: str) -> CloudType:
-            for e in CloudType:
-                if e.value.lower() == value.lower():
-                    return e
-            raise ValueError(f"Invalid type {value}")
-
     def __init__(self,
                  name: str,
                  local_devices: list[LocalDeviceConfig],
@@ -45,7 +30,7 @@ class BackupTask:
                  update_period: PeriodConfig = PeriodConfig(type=PeriodType.DAILY),
                  retention_period: RetentionConfig = RetentionConfig(),
                  cloud_repos: list[CloudRepoConfig] = [],
-                 task_type: 'BackupTask.Type' = Type.STANDARD,
+                 task_type: BackupType = BackupType.STANDARD,
                  no_cloud: bool = False,
     ):
         """ Constructor
@@ -60,7 +45,7 @@ class BackupTask:
             update_period (UpdatePeriod, optional): update period for the data to be backed up. Defaults to UpdatePeriod(UpdatePeriod.Type.DAILY).
             retention_period (RetentionPeriod, optional): retention period for the data to be backed up. Defaults to RetentionPeriod().
             cloud_repos (list[CloudDevice], optional): list of cloud repo roots. Defaults to [].
-            task_type (BackupTask.Type, optional): type of the backup task. Defaults to Type.STANDARD.
+            task_type (BackupType, optional): type of the backup task. Defaults to BackupType.STANDARD.
             no_cloud (bool, optional): whether to slip the cloud backup. Defaults to False.
         """
 
@@ -165,9 +150,9 @@ class BackupTask:
                     
                 # Backup data
                 match(self.task_type):
-                    case BackupTask.Type.STANDARD:
+                    case BackupType.STANDARD:
                         data_backup(primary_repo_path, self.pw_file, [self.root_dir / p for p in self.paths])
-                    case BackupTask.Type.CONTAINER:
+                    case BackupType.DOCKER_COMPOSE:
                         for path in self.paths:
                             # Generate path to the data source
                             src_path = self.root_dir / path

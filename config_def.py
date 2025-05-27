@@ -16,7 +16,7 @@ class CloudType(str, Enum):
     
 class BackupType(str, Enum):
     STANDARD="standard"
-    CONTAINER="container"
+    DOCKER_COMPOSE="docker-compose"
 
 class PeriodConfig(BaseModel):
         

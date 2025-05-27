@@ -18,7 +18,7 @@ def list_mounted_partitions() -> dict[str,list[PathLike]]:
         output = ""
         logger.info('Listing all mounted partitions')
         try:
-            output:str = str(subprocess.run(['lsblk','-J','-o','+LABEL'], capture_output=True))
+            output = subprocess.run(['lsblk','-J','-o','+LABEL'], capture_output=True).stdout
         except subprocess.CalledProcessError as e:
             logger.error('Unable to get list of all mounted partitions')
             raise
@@ -46,7 +46,7 @@ def list_mounted_partitions() -> dict[str,list[PathLike]]:
 
                             # Check if child has mountpoints
                             if 'mountpoints' in child:
-                                mount_list[child_name] = [Path(mp) for mp in child['mountpoints']]
+                                mount_list[child_name] = [Path(mp) for mp in child['mountpoints'] if mp is not None]
 
                                 logger.debug(f'{len(mount_list[child_name])} mount points found for child "{child_name}" for block device "{device_name}"')
 

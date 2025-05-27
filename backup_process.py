@@ -129,7 +129,7 @@ def main():
                 
                 # Get backup tasks based on the configuration
                 try:
-                    tasks = create_backup_tasks(config)
+                    tasks = create_backup_tasks(config, args.no_cloud)
                 except:
                     logger.exception(f'Failed to create backup tasks')
                     raise

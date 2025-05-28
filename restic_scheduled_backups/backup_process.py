@@ -9,11 +9,11 @@ import time
 from pydantic import ValidationError
 import schedule
 
-from config_def import *
-from util.ntfy import NtfyPriorityLevel, ntfy_message
-from util.system import *
-from tasks import task_queue
-from tasks.backup_task import BackupTask
+from restic_scheduled_backups.config_def import *
+from restic_scheduled_backups.util.ntfy import NtfyPriorityLevel, ntfy_message
+from restic_scheduled_backups.util.system import *
+from restic_scheduled_backups.tasks import task_queue
+from restic_scheduled_backups.tasks.backup_task import BackupTask
 
 
 def run_backups(tasks: list['BackupTask']):
@@ -28,7 +28,7 @@ def run_backups(tasks: list['BackupTask']):
 
 update_process = Process(target=run_backups)
 
-import common
+import restic_scheduled_backups.common
 
 logger = logging.getLogger(__name__)
 

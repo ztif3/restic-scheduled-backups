@@ -3,8 +3,8 @@ import logging
 import subprocess
 from os import PathLike
 
+import restic_scheduled_backups.common
 
-        
 logger = logging.getLogger(__name__)
     
 

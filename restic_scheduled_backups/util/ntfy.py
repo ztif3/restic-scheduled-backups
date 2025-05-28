@@ -2,9 +2,9 @@ from enum import Enum
 import logging
 import requests
 
-from config_def import NtfyConfig
+from restic_scheduled_backups.config_def import NtfyConfig
 
-import common
+import restic_scheduled_backups.common
 
 logger = logging.getLogger(__name__)
 

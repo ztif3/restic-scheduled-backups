@@ -8,12 +8,12 @@ from pathlib import Path
 
 import schedule
 
-from util import ntfy
-from util.backup import clean_repo, copy_repo, data_backup, init_repo, unlock_repo
-from config_def import *
-from util.containers import start_container, stop_container
-from util.ntfy import NtfyPriorityLevel, ntfy_message
-from util.system import *
+from restic_scheduled_backups.util import ntfy
+from restic_scheduled_backups.util.backup import clean_repo, copy_repo, data_backup, init_repo, unlock_repo
+from restic_scheduled_backups.config_def import *
+from restic_scheduled_backups.util.containers import start_container, stop_container
+from restic_scheduled_backups.util.ntfy import NtfyPriorityLevel, ntfy_message
+from restic_scheduled_backups.util.system import *
 
 from tasks import task_queue
 

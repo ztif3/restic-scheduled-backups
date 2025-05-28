@@ -4,13 +4,12 @@ import logging
 from os import PathLike
 from pathlib import Path
 from pprint import pformat
-from typing import Optional
 
 import restic
 import restic.errors
 
-import common
-from config_def import NtfyConfig
+import restic_scheduled_backups.common
+from restic_scheduled_backups.config_def import NtfyConfig
 
 logger = logging.getLogger(__name__)
 

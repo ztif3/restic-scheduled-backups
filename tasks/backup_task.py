@@ -64,6 +64,7 @@ class BackupTask:
         self.root_dir = root_dir
         self.pw_file = pw_file
         self.paths = paths
+        self.update_period = update_period
         self.retention_period = retention_period
         self.cloud_repos = cloud_repos
         self.task_type = task_type
@@ -73,18 +74,17 @@ class BackupTask:
         self.scheduled = False
 
 
-        
+    def schedule(self) -> None:
         # Queue task
-        match(update_period.type):
+        match(self.update_period.type):
             case PeriodType.HOURLY:
-                schedule.every(update_period.frequency).hours.at(update_period.run_time).do(self.schedule)
+                schedule.every(self.update_period.frequency).hours.at(self.update_period.run_time).do(self.__queue_task)
             case PeriodType.DAILY:
-                schedule.every(update_period.frequency).days.at(update_period.run_time).do(self.schedule)
+                schedule.every(self.update_period.frequency).days.at(self.update_period.run_time).do(self.__queue_task)
             case PeriodType.WEEKLY:
-                schedule.every(update_period.frequency).weeks.at(update_period.run_time).do(self.schedule)
+                schedule.every(self.update_period.frequency).weeks.at(self.update_period.run_time).do(self.__queue_task)
         
-
-    def schedule(self):
+    def __queue_task(self):
         """ Schedule the task """
         if not self.scheduled:
             task_queue.put(self)
@@ -208,7 +208,7 @@ class BackupTask:
                     if len(msgs) > 0:
                         prefix = ("An Error", "Errors")[len(msgs) > 1]
                         
-                        ntfy.ntfy_message(self.ntfy_config, f'{prefix} while cleaning {primary_repo_path}', '\n'.join(msgs), NtfyPriorityLevel.HIGH)
+                        ntfy.ntfy_message(self.ntfy_config, f'[{prefix}] while running backup task {self.name} - {primary_repo_path}', '\n'.join(msgs), NtfyPriorityLevel.HIGH)
 
                 return primary_repo_path
 
@@ -269,7 +269,7 @@ class BackupTask:
                     if len(msgs) > 0:
                         prefix = ("An Error", "Errors")[len(msgs) > 1]
                         
-                        ntfy.ntfy_message(self.ntfy_config, f'{prefix} while cleaning {primary_repo_path}', '\n'.join(msgs), NtfyPriorityLevel.HIGH)
+                        ntfy.ntfy_message(self.ntfy_config, f'[{prefix}] while running backup task {self.name} - {repo_path}', '\n'.join(msgs), NtfyPriorityLevel.HIGH)
                 
             else:
                 msg = f"Local repo device {repo.device_id} has no mount points"
@@ -317,4 +317,4 @@ class BackupTask:
             if len(msgs) > 0:
                 prefix = ("An Error", "Errors")[len(msgs) > 1]
                 
-                ntfy.ntfy_message(self.ntfy_config, f'{prefix} while cleaning {repo_path}', '\n'.join(msgs), NtfyPriorityLevel.HIGH)
+                ntfy.ntfy_message(self.ntfy_config, f'[{prefix}] while running backup task {self.name} - {repo_path}', '\n'.join(msgs), NtfyPriorityLevel.HIGH)

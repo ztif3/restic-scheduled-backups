@@ -1,4 +1,3 @@
-import logging
 from logging.config import dictConfig
 from multiprocessing_logging import install_mp_handler
 

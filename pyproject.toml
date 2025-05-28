@@ -20,6 +20,22 @@ build-backend = "hatchling.build"
 
 [project]
 name = "restic_scheduled_backups"
+dependencies = [
+    "annotated-types==0.7.0",
+    "certifi==2025.4.26",
+    "charset-normalizer==3.4.2",
+    "idna==3.10",
+    "multiprocessing-logging==0.3.4",
+    "pydantic==2.11.5",
+    "pydantic_core==2.33.2",
+    "requests==2.32.3",
+    "resticpy==1.2.1",
+    "schedule==1.2.2",
+    "typing-inspection==0.4.1",
+    "typing_extensions==4.13.2",
+    "urllib3==2.4.0",
+    "wheel==0.45.1"
+]
 version = "0.1.0"
 authors = [
     { name="Ryan Fitz-Gerald", email="ztif33@gmail.com" }

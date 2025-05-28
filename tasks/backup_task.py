@@ -8,6 +8,7 @@ from pathlib import Path
 
 import schedule
 
+from util import ntfy
 from util.backup import clean_repo, copy_repo, data_backup, init_repo
 from config_def import *
 from util.containers import start_container, stop_container
@@ -151,6 +152,8 @@ class BackupTask:
         Errors;
             RuntimeError: If primary repo device is not mounted.
         """
+        msgs = []  
+
         if mount_list is None:
             mount_list = list_mounted_partitions()
     
@@ -163,12 +166,12 @@ class BackupTask:
                 # TODO Unlock repo if necessary. Must be added to resticpy
 
                 # Initialize repo if necessary
-                init_repo(primary_repo_path, self.pw_file)
+                msgs.extend(init_repo(primary_repo_path, self.pw_file))
                     
                 # Backup data
                 match(self.task_type):
                     case BackupType.STANDARD:
-                        data_backup(primary_repo_path, self.pw_file, [self.root_dir / p for p in self.paths])
+                        msgs.extend(data_backup(primary_repo_path, self.pw_file, [self.root_dir / p for p in self.paths]))
                     case BackupType.DOCKER_COMPOSE:
                         for path in self.paths:
                             # Generate path to the data source
@@ -181,7 +184,7 @@ class BackupTask:
                                 logger.exception(f'Error while stopping container at path {src_path}')
                         
                             # Run backup to primary repo
-                            data_backup(primary_repo_path, self.pw_file, [src_path])
+                            msgs.extend(data_backup(primary_repo_path, self.pw_file, [src_path]))
 
                             # If container task type, start container after running backup
                             try:
@@ -190,21 +193,35 @@ class BackupTask:
                                 logger.exception(f'Error while starting container at path {src_path}')
                     
                 # Clean primary repo
-                clean_repo(
-                    primary_repo_path, 
-                    self.pw_file, 
-                    self.retention_period.days, 
-                    self.retention_period.weeks, 
-                    self.retention_period.months, 
-                    self.retention_period.years
+                msgs.extend(
+                    clean_repo(
+                        primary_repo_path, 
+                        self.pw_file, 
+                        self.retention_period.days, 
+                        self.retention_period.weeks, 
+                        self.retention_period.months, 
+                        self.retention_period.years
+                    )
                 )
+
+                if self.ntfy_config is not None:
+                    if len(msgs) > 0:
+                        prefix = ("An Error", "Errors")[len(msgs) > 1]
+                        
+                        ntfy.ntfy_message(self.ntfy_config, f'{prefix} while cleaning {primary_repo_path}', '\n'.join(msgs), NtfyPriorityLevel.HIGH)
 
                 return primary_repo_path
 
             else:
-                raise RuntimeError(f"Primary repo device {repo.device_id} has no mount points")
+                msg = f"Primary repo device {repo.device_id} has no mount points"
+                if self.ntfy_config is not None:
+                    ntfy.ntfy_message(self.ntfy_config, f'Error backup up to primary repo for {self.name}', msg, NtfyPriorityLevel.HIGH)
+                raise RuntimeError(msg)
 
         else:
+            msg = f"Primary repo device {repo.device_id} is not mounted"
+            if self.ntfy_config is not None:
+                ntfy.ntfy_message(self.ntfy_config, f'Error backup up to primary repo for {self.name}', msg, NtfyPriorityLevel.HIGH)
             raise RuntimeError(f"Primary repo device {repo.device_id} is not mounted")
 
     def local_backup(self, primary_repo_path: Path,  repo:LocalDeviceConfig, mount_list:Optional[dict[str, list[PathLike]]] = None):
@@ -216,6 +233,8 @@ class BackupTask:
             mount_list (Optional[dict[str, list[PathLike]]]): List of mounted partitions. If None or omitted, list_mount_partitions() is called.
         """
 
+        msgs = []
+        
         if mount_list is None:
             mount_list = list_mounted_partitions()
 
@@ -228,24 +247,40 @@ class BackupTask:
                 # TODO Unlock repo if necessary. Must be added to resticpy
 
                 # Initialize repo if necessary
-                init_repo(repo_path, self.pw_file)
+                msgs.extend(init_repo(repo_path, self.pw_file))
 
                 # Copy data from primary repo to local repo
-                copy_repo(primary_repo_path, repo_path, self.pw_file)
+                msgs.extend(copy_repo(primary_repo_path, repo_path, self.pw_file))
 
                 # Clean up local repo
-                clean_repo(
-                    repo_path, 
-                    self.pw_file, 
-                    self.retention_period.days, 
-                    self.retention_period.weeks, 
-                    self.retention_period.months, 
-                    self.retention_period.years
+                msgs.extend(
+                    clean_repo(
+                        repo_path, 
+                        self.pw_file, 
+                        self.retention_period.days, 
+                        self.retention_period.weeks, 
+                        self.retention_period.months, 
+                        self.retention_period.years
+                    )
                 )
+
+
+                if self.ntfy_config is not None:
+                    if len(msgs) > 0:
+                        prefix = ("An Error", "Errors")[len(msgs) > 1]
+                        
+                        ntfy.ntfy_message(self.ntfy_config, f'{prefix} while cleaning {primary_repo_path}', '\n'.join(msgs), NtfyPriorityLevel.HIGH)
+                
             else:
-                logger.error(f"Local repo device {repo.device_id} has no mount points")
+                msg = f"Local repo device {repo.device_id} has no mount points"
+                logger.error(msg)
+                if self.ntfy_config is not None:
+                    ntfy.ntfy_message(self.ntfy_config, f'Error backup up to {primary_repo_path}', msg, NtfyPriorityLevel.HIGH)
         else:
-            logger.error(f"Local repo device {repo.device_id} is not mounted")
+            msg = f"Local repo device {repo.device_id} is not mounted"
+            logger.error(msg)
+            if self.ntfy_config is not None:
+                ntfy.ntfy_message(self.ntfy_config, f'Error backup up to {primary_repo_path}', msg, NtfyPriorityLevel.HIGH)
 
     def cloud_backup(self, primary_repo_path: Path, repo:CloudRepoConfig):
         """ Backup data from the primary repo to a cloud device.
@@ -254,23 +289,32 @@ class BackupTask:
             primary_repo_path (Path): path to the primary restic repo
             repo (CloudRepoConfig): cloud device to backup data to
         """
-                
+        msgs = []
+
         repo_path = repo.get_restic_path()
         
         # TODO Unlock repo if necessary. Must be added to resticpy
 
         # Initialize repo if necessary
-        init_repo(repo_path, self.pw_file)
+        msgs.extend(init_repo(repo_path, self.pw_file))
 
         # Copy data from primary repo to local repo
-        copy_repo(primary_repo_path, repo_path, self.pw_file)
+        msgs.extend(copy_repo(primary_repo_path, repo_path, self.pw_file))
 
         # Clean up local repo
-        clean_repo(
-            repo_path, 
-            self.pw_file, 
-            self.retention_period.days, 
-            self.retention_period.weeks, 
-            self.retention_period.months, 
-            self.retention_period.years
+        msgs.extend(
+            clean_repo(
+                repo_path, 
+                self.pw_file, 
+                self.retention_period.days, 
+                self.retention_period.weeks, 
+                self.retention_period.months, 
+                self.retention_period.years
+            )
         )
+
+        if self.ntfy_config is not None:
+            if len(msgs) > 0:
+                prefix = ("An Error", "Errors")[len(msgs) > 1]
+                
+                ntfy.ntfy_message(self.ntfy_config, f'{prefix} while cleaning {repo_path}', '\n'.join(msgs), NtfyPriorityLevel.HIGH)

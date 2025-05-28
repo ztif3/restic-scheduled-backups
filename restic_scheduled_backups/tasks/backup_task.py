@@ -15,7 +15,7 @@ from restic_scheduled_backups.util.containers import start_container, stop_conta
 from restic_scheduled_backups.util.ntfy import NtfyPriorityLevel, ntfy_message
 from restic_scheduled_backups.util.system import *
 
-from tasks import task_queue
+from restic_scheduled_backups.tasks import task_queue
 
 import common
 

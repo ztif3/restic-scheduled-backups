@@ -14,6 +14,29 @@ from config_def import NtfyConfig
 
 logger = logging.getLogger(__name__)
 
+def unlock_repo(repo: PathLike|str, pw_file: PathLike) -> list[str]:
+    """ Unlock the repo if necessary.
+    Args:
+        repo (PathLike|str): path to the restic repo
+        pw_file (PathLike): password file for the restic repo
+
+    Return:
+        List of error messages  
+    """
+
+    msgs = []
+
+    restic.repository = repo
+    restic.password_file = pw_file
+    # Unlock the repo if necessary
+    try:
+        restic.unlock()
+    except restic.errors.ResticFailedError as e:
+        logger.exception(f'Error while unlocking the repo at {repo}')
+        raise
+
+    return msgs
+
 def init_repo(repo: PathLike|str, pw_file: PathLike) -> list[str]:
     """ Initialize the repo if it does not already exist.
 

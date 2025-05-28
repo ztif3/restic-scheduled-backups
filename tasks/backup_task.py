@@ -9,7 +9,7 @@ from pathlib import Path
 import schedule
 
 from util import ntfy
-from util.backup import clean_repo, copy_repo, data_backup, init_repo
+from util.backup import clean_repo, copy_repo, data_backup, init_repo, unlock_repo
 from config_def import *
 from util.containers import start_container, stop_container
 from util.ntfy import NtfyPriorityLevel, ntfy_message
@@ -163,7 +163,7 @@ class BackupTask:
             if mount_points is not None and len(mount_points) > 0:
                 primary_repo_path = Path(mount_points[0]) / self.repo_name
                     
-                # TODO Unlock repo if necessary. Must be added to resticpy
+                unlock_repo(primary_repo_path, self.pw_file)  # Unlock repo if necessary
 
                 # Initialize repo if necessary
                 msgs.extend(init_repo(primary_repo_path, self.pw_file))
@@ -244,7 +244,7 @@ class BackupTask:
             if mount_points is not None and len(mount_points) > 0:
                 repo_path = Path(mount_points[0]) / self.repo_name
     
-                # TODO Unlock repo if necessary. Must be added to resticpy
+                unlock_repo(primary_repo_path, self.pw_file)  # Unlock repo if necessary
 
                 # Initialize repo if necessary
                 msgs.extend(init_repo(repo_path, self.pw_file))
@@ -293,7 +293,7 @@ class BackupTask:
 
         repo_path = repo.get_restic_path()
         
-        # TODO Unlock repo if necessary. Must be added to resticpy
+        unlock_repo(primary_repo_path, self.pw_file)  # Unlock repo if necessary
 
         # Initialize repo if necessary
         msgs.extend(init_repo(repo_path, self.pw_file))

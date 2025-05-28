@@ -162,12 +162,13 @@ class BackupTask:
 
             if mount_points is not None and len(mount_points) > 0:
                 primary_repo_path = Path(mount_points[0]) / self.repo_name
-                    
-                unlock_repo(primary_repo_path, self.pw_file)  # Unlock repo if necessary
 
                 # Initialize repo if necessary
                 msgs.extend(init_repo(primary_repo_path, self.pw_file))
-                    
+
+                # Unlock repo if necessary
+                unlock_repo(primary_repo_path, self.pw_file)  
+
                 # Backup data
                 match(self.task_type):
                     case BackupType.STANDARD:
@@ -243,11 +244,12 @@ class BackupTask:
 
             if mount_points is not None and len(mount_points) > 0:
                 repo_path = Path(mount_points[0]) / self.repo_name
-    
-                unlock_repo(primary_repo_path, self.pw_file)  # Unlock repo if necessary
 
                 # Initialize repo if necessary
                 msgs.extend(init_repo(repo_path, self.pw_file))
+
+                # Unlock repo if necessary
+                unlock_repo(primary_repo_path, self.pw_file)  
 
                 # Copy data from primary repo to local repo
                 msgs.extend(copy_repo(primary_repo_path, repo_path, self.pw_file))
@@ -290,13 +292,18 @@ class BackupTask:
             repo (CloudRepoConfig): cloud device to backup data to
         """
         msgs = []
+        repo.set_cloud_keys_evs()
+        repo_root = repo.get_restic_path()
+        if repo_root[-1] != '/':
+            repo_root += '/'
 
-        repo_path = repo.get_restic_path()
-        
-        unlock_repo(primary_repo_path, self.pw_file)  # Unlock repo if necessary
+        repo_path = f'{repo_root}{self.repo_name}'
 
         # Initialize repo if necessary
         msgs.extend(init_repo(repo_path, self.pw_file))
+
+        # Unlock repo if necessary
+        unlock_repo(primary_repo_path, self.pw_file)  
 
         # Copy data from primary repo to local repo
         msgs.extend(copy_repo(primary_repo_path, repo_path, self.pw_file))

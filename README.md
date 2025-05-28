@@ -16,7 +16,7 @@ Python module for running scheduled backups using Restic
 - Docker and Docker Compose installed if stopping containers is enabled
 - Instructions assume you are using a linux distribution using systemd
 
-## Installation
+## Installation & Setup
 - Create directory for installing the project (such as /etc/restic_scheduled_backups) and navigate to it
   - `mkdir /etc/restic_scheduled_backups`
   - `cd /etc/restic_scheduled_backups`
@@ -26,6 +26,13 @@ Python module for running scheduled backups using Restic
 - Install the module using pip
   - `pip install git+https://github.com/ztif3/restic_scheduled_backups.git@v0.1.0`
 - Create configuration file
-  - https://github.com/ztif3/restic-scheduled-backups/blob/main/example_config.json?plain=1
+  - `nano config.json`
+  https://github.com/ztif3/restic-scheduled-backups/blob/main/example_config.json?plain=1
 - Create a systemd service
-  - 
+  - `sudo nano /etc/systemd/system/restic_scheduled_backups.service`
+  https://github.com/ztif3/restic-scheduled-backups/blob/main/restic_scheduled_backups.service?plain=1
+- Set permissions on the service file
+  - `sudo chmod 644 /lib/systemd/system/restic_scheduled_backups.service`
+- Enable the service
+  - `sudo systemctl daemon-reload`
+  - `sudo systemctl enable restic_scheduled_backups.service`

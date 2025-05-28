@@ -17,7 +17,7 @@ from restic_scheduled_backups.util.system import *
 
 from restic_scheduled_backups.tasks import task_queue
 
-import common
+import restic_scheduled_backups.common
 
 logger = logging.getLogger(__name__)
 

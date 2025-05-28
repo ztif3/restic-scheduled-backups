@@ -5,3 +5,4 @@ log
 log.*
 config.json
 config copy.json
+.vscode

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import restic_scheduled_backups.common
 import argparse
 import logging
 
@@ -28,7 +29,6 @@ def run_backups(tasks: list['BackupTask']):
 
 update_process = Process(target=run_backups)
 
-import restic_scheduled_backups.common
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Run data backup script.')
 
-    parser.add_argument('-c','--config', type=str,
+    parser.add_argument('-c', '--config', type=str,
                         help='Configuration JSON File.')
     parser.add_argument('--debug', action='store_true', default=False,
                         help='Show debug logging level.')
@@ -108,6 +108,8 @@ def main():
                         help='Do not perform cloud backups.')
     parser.add_argument('-t', '--tasks', nargs='*',
                         help='Specify tasks to run. If omitted all tasks will be run.', required=False)
+    parser.add_argument('--validate', action='store_true',
+                        default=False, help='Validate configuration and exit.')
 
     args = parser.parse_args()
 
@@ -129,37 +131,39 @@ def main():
                     logger.exception(f'Invalid configuration')
                     raise
 
-                # Get backup tasks based on the configuration
-                try:
-                    tasks = create_backup_tasks(config, args.no_cloud)
-                except:
-                    logger.exception(f'Failed to create backup tasks')
+                if not args.validate:
+                    # Get backup tasks based on the configuration
+                    try:
+                        tasks = create_backup_tasks(config, args.no_cloud)
+                    except:
+                        logger.exception(f'Failed to create backup tasks')
 
-                    if config.ntfy is not None:
-                        ntfy_message(config.ntfy, "Backup Failed",
-                                     f"Unable to load tasks", NtfyPriorityLevel.HIGH)
-                    raise
-                
-                # Get list of enabled tasks to run
-                scheduled_tasks = tasks
+                        if config.ntfy is not None:
+                            ntfy_message(config.ntfy, "Backup Failed",
+                                        f"Unable to load tasks", NtfyPriorityLevel.HIGH)
+                        raise
 
-                if len(args.tasks) > 0:
-                    scheduled_tasks = [task for task in tasks if task.name in args.tasks]
-                
-                # Run tasks
-                if args.immediate:
-                    # Run backup tasks
-                    for task in scheduled_tasks:
-                        task.run()
-                else:
-                    # Schedule enable enabled
-                    for task in scheduled_tasks:
-                        task.schedule() 
+                    # Get list of enabled tasks to run
+                    scheduled_tasks = tasks
 
-                    # run scheduler
-                    while True:
-                        schedule.run_pending()
-                        time.sleep(1)
+                    if len(args.tasks) > 0:
+                        scheduled_tasks = [
+                            task for task in tasks if task.name in args.tasks]
+
+                    # Run tasks
+                    if args.immediate:
+                        # Run backup tasks
+                        for task in scheduled_tasks:
+                            task.run()
+                    else:
+                        # Schedule enable enabled
+                        for task in scheduled_tasks:
+                            task.schedule()
+
+                        # run scheduler
+                        while True:
+                            schedule.run_pending()
+                            time.sleep(1)
         else:
             logger.error(f'Config file "{config_path}" does not exist.')
 

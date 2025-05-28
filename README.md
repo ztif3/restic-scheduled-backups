@@ -28,13 +28,13 @@ Python module for running scheduled backups using Restic
 - Create configuration file
   - `nano config.json`
   
-  ```text:external/example_config.json
+  ```text:example_config.json
   ```
 - Create a systemd service
   - `sudo nano /etc/systemd/system/restic_scheduled_backups.service`
   
   
-  ```text:external/restic_scheduled_backups.service
+  ```text:restic_scheduled_backups.service
   ```
 - Set permissions on the service file
   - `sudo chmod 644 /lib/systemd/system/restic_scheduled_backups.service`

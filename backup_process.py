@@ -171,7 +171,3 @@ def main():
 
     else:
         logger.error('No config file provided.')
-
-
-if __name__ == '__main__':
-    main()

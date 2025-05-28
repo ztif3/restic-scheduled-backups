@@ -1,0 +1,87 @@
+{
+    
+    "ntfy": {                               
+        "topic_url": "<ntfy topic url>",    
+        "token": "<ntfy token>"            
+    },    
+    "default": {
+        "period": {
+            "period_type": "days",
+            "frequency": 1,
+            "run_time": "02:00"
+        },
+        "local_devices": [
+            {
+                "name":"backup1",
+                "device_id": "sdb1",
+                "primary": true
+            },
+            {
+                "name":"backup2",
+                "device_id": "sdc1"
+            }
+        ],
+        "cloud_repos": [
+            {
+                "name":"backblaze",
+                "type":"s3-compatible",
+                "path":"<Backup URL>",
+                "key_id": "<Key ID>",
+                "key": "<Key>"
+            }
+        ],
+        "retention": {
+            "days": 14,
+            "weeks": 16,
+            "months": 18,
+            "years": 3
+        }
+    },
+    "backups": {
+        "data":{
+            "repo": "data",
+            "root": "<root source directory>",
+            "pw_file": "<path to restic password file>",
+            "paths": [
+                "documents",
+                "pictures",
+                "music"
+            ]
+        },
+        "containers":{
+            "repo": "containers",
+            "root": "<root source directory>",
+            "pw_file": "<path to restic password file>",
+            "type": "docker-compose",
+            "paths": [
+                "container1",
+                "container2"
+            ]
+        },
+        "media":{
+            "repo": "media",
+            "root": "<root source directory>",
+            "pw_file": "<path to restic password file>",
+            "paths": [
+                "."
+            ],
+            "local_devices": [
+                {
+                    "name":"backup1",
+                    "device_id": "sdb1",
+                    "primary": true
+                },
+                {
+                    "name":"backup2",
+                    "device_id": "sdc1"
+                }
+            ],
+            "retention": {
+                "days": 7,
+                "weeks": 0,
+                "months": 0,
+                "years": 0
+            }
+        }
+    }
+}

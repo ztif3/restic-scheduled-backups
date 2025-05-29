@@ -6,7 +6,7 @@ After=network.target
 Type=idle
 Restart=on-failure
 User=root
-ExecStart=/bin/bash -c 'cd /etc/restic_scheduled_backups && source .env/bin/activate && python -m restic_scheduled_backups -c ./config.json'
+ExecStart=/bin/bash -c 'cd /etc/restic_scheduled_backups && source .venv/bin/activate && python -m restic_scheduled_backups -c ./config.json'
 
 [Install]
 WantedBy=multi-user.target

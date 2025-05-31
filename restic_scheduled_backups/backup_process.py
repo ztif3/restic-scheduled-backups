@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from json import JSONDecodeError
 import restic_scheduled_backups.common
 import argparse
 import logging
@@ -126,10 +127,19 @@ def main():
             with open(config_path, 'r') as f:
                 # Load the configuration
                 try:
+
                     config = BackupConfig(**json.load(f))
-                except ValidationError as e:
-                    logger.exception(f'Invalid configuration')
+                except JSONDecodeError as e:
+                    logger.exception(f'Failed to parse configuration file {config_path}')
                     raise
+                except UnicodeDecodeError as e:
+                    logger.exception(f'Unicode decoding error in configuration file {config_path}')
+                    raise
+                except ValidationError as e:
+                    logger.exception(f'Config file failed validation {config_path}')
+                    raise
+                else:
+                    logger.info(f'Config file loaded successfully {config_path}')
 
                 if not args.validate:
                     # Get backup tasks based on the configuration
@@ -142,11 +152,13 @@ def main():
                             ntfy_message(config.ntfy, "Backup Failed",
                                         f"Unable to load tasks", NtfyPriorityLevel.HIGH)
                         raise
+                    else:
+                        logger.info(f'{len(tasks)} Backup tasks created successfully')
 
                     # Get list of enabled tasks to run
                     scheduled_tasks = tasks
 
-                    if len(args.tasks) > 0:
+                    if args.tasks is not None and len(args.tasks) > 0:
                         scheduled_tasks = [
                             task for task in tasks if task.name in args.tasks]
 

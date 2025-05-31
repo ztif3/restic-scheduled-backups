@@ -75,6 +75,7 @@ class BackupTask:
 
 
     def schedule(self) -> None:
+        logger.info(f'Scheduling task: {self.name} - {self.update_period.type} - freq:{self.update_period.frequency} - at:{self.update_period.run_time}')
         # Queue task
         match(self.update_period.type):
             case PeriodType.HOURLY:
@@ -88,7 +89,7 @@ class BackupTask:
         """ Schedule the task """
         if not self.scheduled:
             task_queue.put(self)
-            logging.debug(f'Scheduled {self.name}')
+            logging.info(f'queued task: {self.name}')
             self.scheduled = True
 
     def run(self):

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from json import JSONDecodeError
-import restic_scheduled_backups.common
 import argparse
 import logging
 
@@ -23,13 +22,18 @@ def run_backups(tasks: list['BackupTask']):
     Args:
         tasks (list[BackupTask]): list of backup tasks
     """
+    logger.info('Task queue worker process started')
+
     while True:
         task = task_queue.get()
+
+        logger.info(f'Running task {task.name}')
         task.run()
 
 
-update_process = Process(target=run_backups)
+task_queue_worker = Process(target=run_backups)
 
+import restic_scheduled_backups.common
 
 logger = logging.getLogger(__name__)
 
@@ -171,6 +175,9 @@ def main():
                         # Schedule enable enabled
                         for task in scheduled_tasks:
                             task.schedule()
+
+                        # Start task queue worker process
+                        task_queue_worker.start()
 
                         # run scheduler
                         while True:

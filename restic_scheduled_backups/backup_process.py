@@ -17,7 +17,7 @@ from restic_scheduled_backups.tasks import task_queue
 from restic_scheduled_backups.tasks.backup_task import BackupTask
 
 
-def run_backups(tasks: list['BackupTask']):
+def run_backups():
     """ Run backups for each task
     Args:
         tasks (list[BackupTask]): list of backup tasks

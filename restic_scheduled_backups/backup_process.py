@@ -27,8 +27,14 @@ def run_backups():
     while True:
         task = task_queue.get()
 
-        logger.info(f'Running task {task.name}')
-        task.run()
+        if task is None:
+            logger.info('Received None task, exiting worker process')
+            break
+        else:
+            logger.info(f'Running task {task.name}')
+            task.run()
+
+    logger.critical('Worker process completed')
 
 
 task_queue_worker = Process(target=run_backups)
@@ -36,9 +42,6 @@ task_queue_worker = Process(target=run_backups)
 import restic_scheduled_backups.common
 
 logger = logging.getLogger(__name__)
-
-task_queue = Queue()
-
 
 def create_backup_tasks(config: BackupConfig, no_cloud: bool = False) -> list[BackupTask]:
     """ Get list of backup tasks from config dictionary

@@ -69,8 +69,14 @@ def create_backup_tasks(config: BackupConfig, no_cloud: bool = False) -> list[Ba
     for name, task_config in config.backups.items():
         period = task_config.period or def_period
         local_devices = task_config.local_devices or def_local
-        cloud_repos = task_config.cloud_repos or def_cloud or []
+        cloud_repos = task_config.cloud_repos 
         retention = task_config.retention or def_retention
+
+        if cloud_repos is None:
+            if def_cloud is None:
+                cloud_repos = []
+            else:
+                cloud_repos = def_cloud
 
         # Verify backup task has all required parameters
         if period is None:

@@ -1,7 +1,7 @@
 from enum import Enum
 import os
 from typing import Optional
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 
 class PeriodType(str, Enum):
@@ -10,7 +10,16 @@ class PeriodType(str, Enum):
     DAILY = 'daily'
     WEEKLY = 'weekly'
 
-    
+class WeekdayType(str, Enum):
+    """ Represents the type of weekday """
+    SUNDAY = 'sunday'
+    MONDAY = 'monday'
+    TUESDAY = 'tuesday'
+    WEDNESDAY = 'wednesday'
+    THURSDAY = 'thursday'
+    FRIDAY = 'friday'
+    SATURDAY = 'saturday'
+
 class CloudType(str, Enum):
     S3_COMPATIBLE = "s3-compatible"
     
@@ -23,12 +32,13 @@ class PeriodConfig(BaseModel):
     type: PeriodType = PeriodType.DAILY 
     frequency: int = 1
     run_time: str = "00:00"
+    weekday: Optional[WeekdayType] = None
     
     @field_validator("type", mode="before")
     @classmethod
     def transform(cls, raw: str) -> PeriodType:
         return PeriodType(raw.lower())
-
+    
 class LocalDeviceConfig(BaseModel):
     name: str
     device_id: str

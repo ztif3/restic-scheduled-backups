@@ -77,11 +77,27 @@ class BackupTask:
         # Queue task
         match(self.update_period.type):
             case PeriodType.HOURLY:
-                schedule.every(self.update_period.frequency).hours.at(self.update_period.run_time).do(self.__queue_task)
+                schedule.every(self.update_period.frequency).hours.do(self.__queue_task)
             case PeriodType.DAILY:
-                schedule.every(self.update_period.frequency).days.at(self.update_period.run_time).do(self.__queue_task)
+                schedule.every(self.update_period.frequency).days.at(self.update_period.run_time).do(self.__queue_task) 
             case PeriodType.WEEKLY:
-                schedule.every(self.update_period.frequency).weeks.at(self.update_period.run_time).do(self.__queue_task)
+                match(self.update_period.weekday):
+                    case WeekdayType.SUNDAY:
+                        schedule.every(self.update_period.frequency).sunday.at(self.update_period.run_time).do(self.__queue_task)
+                    case WeekdayType.MONDAY:
+                        schedule.every(self.update_period.frequency).monday.at(self.update_period.run_time).do(self.__queue_task)
+                    case WeekdayType.TUESDAY:
+                        schedule.every(self.update_period.frequency).tuesday.at(self.update_period.run_time).do(self.__queue_task)
+                    case WeekdayType.WEDNESDAY:
+                        schedule.every(self.update_period.frequency).wednesday.at(self.update_period.run_time).do(self.__queue_task)
+                    case WeekdayType.THURSDAY:
+                        schedule.every(self.update_period.frequency).thursday.at(self.update_period.run_time).do(self.__queue_task)
+                    case WeekdayType.FRIDAY:
+                        schedule.every(self.update_period.frequency).friday.at(self.update_period.run_time).do(self.__queue_task)
+                    case WeekdayType.SATURDAY:
+                        schedule.every(self.update_period.frequency).saturday.at(self.update_period.run_time).do(self.__queue_task) 
+                    case _:
+                        schedule.every(self.update_period.frequency).weeks.at(self.update_period.run_time).do(self.__queue_task)
         
     def __queue_task(self):
         """ Schedule the task """

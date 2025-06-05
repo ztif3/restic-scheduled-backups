@@ -67,6 +67,10 @@ class CloudRepoConfig(BaseModel):
         
         return f"{prefix}{self.path}"
 
+class RepoConfig(BaseModel):
+    local_devices: list[LocalDeviceConfig]
+    cloud_repos: Optional[list[CloudRepoConfig]] = None
+
 class RetentionConfig(BaseModel):
     days: int = 14
     weeks: int = 16
@@ -80,14 +84,12 @@ class BackupTaskConfig(BaseModel):
     paths: list[str]
     type: BackupType = BackupType.STANDARD
     period: Optional[PeriodConfig] = None
-    local_devices: Optional[list[LocalDeviceConfig]] = None
-    cloud_repos: list[CloudRepoConfig] = []
+    repo_roots: Optional[RepoConfig] = None
     retention: Optional[RetentionConfig] = None
 
 class DefaultConfig(BaseModel):
     period: Optional[PeriodConfig] = None
-    local_devices: Optional[list[LocalDeviceConfig]] = None
-    cloud_repos: Optional[list[CloudRepoConfig]] = None
+    repo_roots: Optional[RepoConfig] = None
     retention: Optional[RetentionConfig] = None
 
 class NtfyConfig(BaseModel):

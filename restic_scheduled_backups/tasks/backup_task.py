@@ -24,14 +24,13 @@ logger = logging.getLogger(__name__)
 class BackupTask:
     def __init__(self,
                  name: str,
-                 local_devices: list[LocalDeviceConfig],
+                 repo_roots: RepoConfig,
                  repo_name: str,
                  root_dir: PathLike,
                  pw_file: PathLike,
                  paths: list[str],
                  update_period: PeriodConfig = PeriodConfig(type=PeriodType.DAILY),
                  retention_period: RetentionConfig = RetentionConfig(),
-                 cloud_repos: list[CloudRepoConfig] = [],
                  task_type: BackupType = BackupType.STANDARD,
                  no_cloud: bool = False,
                  ntfy_config: Optional[NtfyConfig] = None,
@@ -40,7 +39,7 @@ class BackupTask:
 
         Args:
             name (str): name of the task
-            local_devices (dict[str, str]): list of local repo roots
+            repo_roots  (RepoConfig): root directories for the various repositories
             repo_name (str): name of the repository
             root_dir (PathLike): root directory for the data to be backed up
             pw_file (PathLike): path to the password file 
@@ -59,14 +58,13 @@ class BackupTask:
             pw_file = Path(pw_file)
         
         self.name = name
-        self.local_devices = local_devices
+        self.repo_roots = repo_roots
         self.repo_name = repo_name
         self.root_dir = root_dir
         self.pw_file = pw_file
         self.paths = paths
         self.update_period = update_period
         self.retention_period = retention_period
-        self.cloud_repos = cloud_repos
         self.task_type = task_type
         self.no_cloud = no_cloud
         self.ntfy_config = ntfy_config
@@ -99,11 +97,11 @@ class BackupTask:
         
         logger.info(f"Starting task {self.name}")
         try:
-            if len(self.local_devices) > 0:
+            if len(self.repo_roots.local_devices) > 0:
                 # Get primary repo
                 primary_repo = None
 
-                for repo in self.local_devices:
+                for repo in self.repo_roots.local_devices:
                     if repo.primary:
                         primary_repo = repo
                         break
@@ -112,12 +110,12 @@ class BackupTask:
                     primary_repo_path = self.primary_backup(primary_repo, mount_list)
             
                     # Copy backup to other local repos
-                    if len(self.local_devices) > 1:
-                        for repo in self.local_devices[1:]:
+                    if len(self.repo_roots.local_devices) > 1:
+                        for repo in self.repo_roots.local_devices[1:]:
                             self.local_backup(primary_repo_path, repo, mount_list)
 
-                    if not self.no_cloud:
-                        for repo in self.cloud_repos:
+                    if not self.no_cloud and self.repo_roots.cloud_repos is not None:
+                        for repo in self.repo_roots.cloud_repos:
                             self.cloud_backup(primary_repo_path, repo)   
 
                     if self.ntfy_config is not None:

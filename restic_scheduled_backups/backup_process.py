@@ -54,49 +54,39 @@ def create_backup_tasks(config: BackupConfig, no_cloud: bool = False) -> list[Ba
         list[BackupTask]: list of backup tasks
     """
     def_period = None
-    def_local = None
-    def_cloud = None
+    def_repo_roots = None
     def_retention = None
 
     if config.default is not None:
         def_period = config.default.period
-        def_local = config.default.local_devices
-        def_cloud = config.default.cloud_repos
+        def_repo_roots = config.default.repo_roots
         def_retention = config.default.retention
 
     tasks = []
 
     for name, task_config in config.backups.items():
         period = task_config.period or def_period
-        local_devices = task_config.local_devices or def_local
-        cloud_repos = task_config.cloud_repos 
+        repo_roots = task_config.repo_roots or def_repo_roots
         retention = task_config.retention or def_retention
-
-        if cloud_repos is None:
-            if def_cloud is None:
-                cloud_repos = []
-            else:
-                cloud_repos = def_cloud
 
         # Verify backup task has all required parameters
         if period is None:
             raise ValueError(f"Backup task {name} has no period defined")
         if retention is None:
             raise ValueError(f"Backup task {name} has no retention defined")
-        if local_devices is None:
+        if repo_roots is None:
             raise ValueError(
-                f"Backup task {name} has no local devices defined")
+                f"Backup task {name} has no repo roots defined")
 
         task = BackupTask(
             name=name,
-            local_devices=local_devices,
+            repo_roots=repo_roots,
             repo_name=task_config.repo,
             root_dir=task_config.root,
             pw_file=task_config.pw_file,
             paths=task_config.paths,
             update_period=period,
             retention_period=retention,
-            cloud_repos=cloud_repos,
             task_type=task_config.type or BackupType.STANDARD,
             no_cloud=no_cloud,
             ntfy_config=config.ntfy

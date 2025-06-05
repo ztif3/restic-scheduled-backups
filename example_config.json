@@ -10,26 +10,28 @@
             "frequency": 1,
             "run_time": "02:00"
         },
-        "local_devices": [
-            {
-                "name":"backup1",
-                "device_id": "sdb1",
-                "primary": true
-            },
-            {
-                "name":"backup2",
-                "device_id": "sdc1"
-            }
-        ],
-        "cloud_repos": [
-            {
-                "name":"backblaze",
-                "type":"s3-compatible",
-                "path":"<Backup URL>",
-                "key_id": "<Key ID>",
-                "key": "<Key>"
-            }
-        ],
+        "repo_roots": {
+            "local_devices": [
+                {
+                    "name":"backup1",
+                    "device_id": "sdb1",
+                    "primary": true
+                },
+                {
+                    "name":"backup2",
+                    "device_id": "sdc1"
+                }
+            ],
+            "cloud_repos": [
+                {
+                    "name":"backblaze",
+                    "type":"s3-compatible",
+                    "path":"<Backup URL>",
+                    "key_id": "<Key ID>",
+                    "key": "<Key>"
+                }
+            ]
+        },
         "retention": {
             "days": 14,
             "weeks": 16,
@@ -65,17 +67,19 @@
             "paths": [
                 "."
             ],
-            "local_devices": [
-                {
-                    "name":"backup1",
-                    "device_id": "sdb1",
-                    "primary": true
-                },
-                {
-                    "name":"backup2",
-                    "device_id": "sdc1"
-                }
-            ],
+            "repo_roots": {
+                "local_devices": [
+                    {
+                        "name":"backup1",
+                        "device_id": "sdb1",
+                        "primary": true
+                    },
+                    {
+                        "name":"backup2",
+                        "device_id": "sdc1"
+                    }
+                ]
+            }, 
             "retention": {
                 "days": 7,
                 "weeks": 0,

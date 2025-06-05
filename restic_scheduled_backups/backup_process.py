@@ -35,7 +35,7 @@ def _run_backups(task_queue: Queue):
             break
         else:
             logger.info(f'Running task {task.name}')
-            task.run()
+            task.run_base()
 
     logger.critical('Worker process completed')
 

@@ -46,6 +46,8 @@ class TaskBase(ABC):
         self.task_queue = task_queue
         self.ntfy_config = ntfy_config
 
+        self.skip_count = 0
+
         self.scheduled = False
 
 
@@ -60,21 +62,21 @@ class TaskBase(ABC):
             case PeriodType.WEEKLY:
                 match(self.update_period.weekday):
                     case WeekdayType.SUNDAY:
-                        schedule.every(self.update_period.frequency).sunday.at(self.update_period.run_time).do(self.__queue_task)
+                        schedule.every().sunday.at(self.update_period.run_time).do(self.__queue_task)
                     case WeekdayType.MONDAY:
-                        schedule.every(self.update_period.frequency).monday.at(self.update_period.run_time).do(self.__queue_task)
+                        schedule.every().monday.at(self.update_period.run_time).do(self.__queue_task)
                     case WeekdayType.TUESDAY:
-                        schedule.every(self.update_period.frequency).tuesday.at(self.update_period.run_time).do(self.__queue_task)
+                        schedule.every().tuesday.at(self.update_period.run_time).do(self.__queue_task)
                     case WeekdayType.WEDNESDAY:
-                        schedule.every(self.update_period.frequency).wednesday.at(self.update_period.run_time).do(self.__queue_task)
+                        schedule.every().wednesday.at(self.update_period.run_time).do(self.__queue_task)
                     case WeekdayType.THURSDAY:
-                        schedule.every(self.update_period.frequency).thursday.at(self.update_period.run_time).do(self.__queue_task)
+                        schedule.every().thursday.at(self.update_period.run_time).do(self.__queue_task)
                     case WeekdayType.FRIDAY:
-                        schedule.every(self.update_period.frequency).friday.at(self.update_period.run_time).do(self.__queue_task)
+                        schedule.every().friday.at(self.update_period.run_time).do(self.__queue_task)
                     case WeekdayType.SATURDAY:
-                        schedule.every(self.update_period.frequency).saturday.at(self.update_period.run_time).do(self.__queue_task) 
+                        schedule.every().saturday.at(self.update_period.run_time).do(self.__queue_task) 
                     case _:
-                        schedule.every(self.update_period.frequency).weeks.at(self.update_period.run_time).do(self.__queue_task)
+                        schedule.every().weeks.at(self.update_period.run_time).do(self.__queue_task)
         
     def __queue_task(self):
         """ Schedule the task """
@@ -82,6 +84,17 @@ class TaskBase(ABC):
             self.task_queue.put(self)
             logging.info(f'queued task: {self.name}')
             self.scheduled = True
+
+    def start_task(self):
+        """ Handles running tasks """
+
+        if (self.update_period.type != PeriodType.WEEKLY and self.update_period.weekday is not None) or self.skip_count < self.update_period.frequency - 1:
+            self.skip_count = 0
+            self.run()
+        else:
+            self.skip_count += 1
+
+
 
     @abstractmethod
     def run(self):

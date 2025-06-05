@@ -4,7 +4,7 @@ import argparse
 import logging
 
 from pathlib import Path
-from multiprocessing import Process, Queue
+from multiprocessing import Process
 
 import time
 from pydantic import ValidationError
@@ -15,6 +15,8 @@ from restic_scheduled_backups.util.ntfy import NtfyPriorityLevel, ntfy_message
 from restic_scheduled_backups.util.system import *
 from restic_scheduled_backups.tasks import task_queue
 from restic_scheduled_backups.tasks.backup_task import BackupTask
+
+from pprint import pformat
 
 
 def run_backups():
@@ -142,7 +144,7 @@ def main():
                     logger.exception(f'Config file failed validation {config_path}')
                     raise
                 else:
-                    logger.info(f'Config file loaded successfully {config_path}')
+                    logger.info(f'Config file loaded successfully {config_path}: \n{pformat(config.model_dump())}')
 
                 if not args.validate:
                     # Get backup tasks based on the configuration

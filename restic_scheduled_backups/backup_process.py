@@ -4,22 +4,23 @@ import argparse
 import logging
 
 from pathlib import Path
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 
 import time
 from pydantic import ValidationError
 import schedule
 
 from restic_scheduled_backups.config_def import *
+from restic_scheduled_backups.tasks import create_tasks
+from restic_scheduled_backups.tasks.container_backup_task import DCBackupTask
 from restic_scheduled_backups.util.ntfy import NtfyPriorityLevel, ntfy_message
 from restic_scheduled_backups.util.system import *
-from restic_scheduled_backups.tasks import task_queue
 from restic_scheduled_backups.tasks.backup_task import BackupTask
 
 from pprint import pformat
 
 
-def run_backups():
+def _run_backups(task_queue: Queue):
     """ Run backups for each task
     Args:
         tasks (list[BackupTask]): list of backup tasks
@@ -39,65 +40,12 @@ def run_backups():
     logger.critical('Worker process completed')
 
 
-task_queue_worker = Process(target=run_backups)
+task_queue = Queue()
+task_queue_worker = Process(target=_run_backups, args=(task_queue,))
 
 import restic_scheduled_backups.common
 
 logger = logging.getLogger(__name__)
-
-def create_backup_tasks(config: BackupConfig, no_cloud: bool = False) -> list[BackupTask]:
-    """ Get list of backup tasks from config dictionary
-
-    Args:
-        config (dict): config dictionary
-        no_cloud (bool): If True, skip cloud backups. Defaults to False.
-
-    Returns:
-        list[BackupTask]: list of backup tasks
-    """
-    def_period = None
-    def_repo_roots = None
-    def_retention = None
-
-    if config.default is not None:
-        def_period = config.default.period
-        def_repo_roots = config.default.repo_roots
-        def_retention = config.default.retention
-
-    tasks = []
-
-    for name, task_config in config.backups.items():
-        period = task_config.period or def_period
-        repo_roots = task_config.repo_roots or def_repo_roots
-        retention = task_config.retention or def_retention
-
-        # Verify backup task has all required parameters
-        if period is None:
-            raise ValueError(f"Backup task {name} has no period defined")
-        if retention is None:
-            raise ValueError(f"Backup task {name} has no retention defined")
-        if repo_roots is None:
-            raise ValueError(
-                f"Backup task {name} has no repo roots defined")
-
-        task = BackupTask(
-            name=name,
-            repo_roots=repo_roots,
-            repo_name=task_config.repo,
-            root_dir=task_config.root,
-            pw_file=task_config.pw_file,
-            paths=task_config.paths,
-            update_period=period,
-            retention_period=retention,
-            task_type=task_config.type or BackupType.STANDARD,
-            no_cloud=no_cloud,
-            ntfy_config=config.ntfy
-        )
-
-        tasks.append(task)
-
-    return tasks
-
 
 def main():
     """  Main method for starting the backup process """
@@ -132,7 +80,6 @@ def main():
             with open(config_path, 'r') as f:
                 # Load the configuration
                 try:
-
                     config = BackupConfig(**json.load(f))
                 except JSONDecodeError as e:
                     logger.exception(f'Failed to parse configuration file {config_path}')
@@ -149,7 +96,7 @@ def main():
                 if not args.validate:
                     # Get backup tasks based on the configuration
                     try:
-                        tasks = create_backup_tasks(config, args.no_cloud)
+                        tasks = create_tasks(config, task_queue, args.no_cloud)
                     except:
                         logger.exception(f'Failed to create backup tasks')
 

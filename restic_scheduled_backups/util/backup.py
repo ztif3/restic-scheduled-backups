@@ -4,6 +4,7 @@ import logging
 from os import PathLike
 from pathlib import Path
 from pprint import pformat
+from typing import Optional
 
 import restic
 import restic.errors
@@ -192,4 +193,47 @@ def clean_repo(repo: PathLike|str, pw_file: PathLike, ret_days: int, ret_weeks: 
 
     return msgs
 
-# TODO Add check method
+
+def check_repo(repo: PathLike | str, pw_file: PathLike, read_data: bool = False, subset:Optional[str]=None) -> list[str]:
+    """ Check the integrity of a repository. Optionally, perform a read data check and/or specify a subset to check.
+
+    Args:
+        repo (PathLike | str): _description_
+        pw_file (PathLike): _description_
+        read_data (bool, optional): _description_. Defaults to False.
+        subset (Optional[str], optional): _description_. Defaults to None.
+
+    Returns:
+        list[str]: _description_
+    """
+
+    msgs = []
+
+    # Set repo parameters
+    restic.repository = repo
+    restic.password_file = pw_file
+
+    try:
+        type_str = 'Standard'
+
+        if read_data:
+            type_str = 'Read Data'
+
+            if subset is not None:
+                logger.info(f'Running read data subset:{subset} check on repository {repo}')
+                result = restic.check(read_data_subset=subset)
+            else:
+                logger.info(f'Running read data check on repository {repo}')
+                result = restic.check(read_data=True)
+        else:
+            logger.info(f'Running standard check on repository {repo}')
+            result = restic.check(read_data=False)
+
+    except restic.errors.ResticFailedError as e:
+        msg =f'Check for {repo} failed.'
+        logger.exception(msg)
+        msgs.append(msg)
+    else:
+        logger.info(f'Check for {repo} completed successfully.')
+        logger.debug(f'Check result for {repo}\n{pformat(result)}')
+    return msgs

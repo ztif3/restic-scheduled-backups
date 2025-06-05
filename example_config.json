@@ -5,11 +5,6 @@
         "token": "<ntfy token>"            
     },    
     "default": {
-        "period": {
-            "period_type": "days",
-            "frequency": 1,
-            "run_time": "02:00"
-        },
         "repo_roots": {
             "local_devices": [
                 {
@@ -39,26 +34,91 @@
             "years": 3
         }
     },
-    "backups": {
+    "tasks": {
         "data":{
             "repo": "data",
             "root": "<root source directory>",
             "pw_file": "<path to restic password file>",
+            "type": "standard",
             "paths": [
                 "documents",
                 "pictures",
                 "music"
-            ]
+            ],    
+            "period": {
+                "period_type": "days",
+                "frequency": 1,
+                "run_time": "02:00"
+            }
+        },
+        "data_check":{
+            "repo": "data",
+            "root": "<root source directory>",
+            "pw_file": "<path to restic password file>",
+            "type": "check",
+            "read_data": false,
+            "period": {
+                "period_type": "weeks",
+                "frequency": 1,
+                "run_time": "02:00",
+                "weekday": "sunday" 
+            }
+        },
+        "data_read_data_check":{
+            "repo": "data",
+            "root": "<root source directory>",
+            "pw_file": "<path to restic password file>",
+            "type": "check",
+            "read_data": true,
+            "subset": "2.5%",
+            "period": {
+                "period_type": "weeks",
+                "frequency": 4,
+                "run_time": "02:00",
+                "weekday": "sunday" 
+            }
         },
         "containers":{
             "repo": "containers",
             "root": "<root source directory>",
             "pw_file": "<path to restic password file>",
-            "type": "docker-compose",
+            "type": "docker-compose-backup",
             "paths": [
                 "container1",
                 "container2"
-            ]
+            ],    
+            "period": {
+                "period_type": "days",
+                "frequency": 1,
+                "run_time": "02:00"
+            }
+        },
+        "containers_check":{
+            "repo": "containers",
+            "root": "<root source directory>",
+            "pw_file": "<path to restic password file>",
+            "type": "check",
+            "read_data": false,
+            "period": {
+                "period_type": "weeks",
+                "frequency": 1,
+                "run_time": "02:00",
+                "weekday": "sunday" 
+            }
+        },
+        "containers_read_data_check":{
+            "repo": "containers",
+            "root": "<root source directory>",
+            "pw_file": "<path to restic password file>",
+            "type": "check",
+            "read_data": true,
+            "subset": "2.5%",
+            "period": {
+                "period_type": "weeks",
+                "frequency": 4,
+                "run_time": "02:00",
+                "weekday": "sunday" 
+            }
         },
         "media":{
             "repo": "media",
@@ -85,6 +145,64 @@
                 "weeks": 0,
                 "months": 0,
                 "years": 0
+            },    
+            "period": {
+                "period_type": "days",
+                "frequency": 1,
+                "run_time": "02:00"
+            }
+        },
+        "media_check":{
+            "repo": "media",
+            "root": "<root source directory>",
+            "pw_file": "<path to restic password file>",
+            "repo_roots": {
+                "local_devices": [
+                    {
+                        "name":"backup1",
+                        "device_id": "sdb1",
+                        "primary": true
+                    },
+                    {
+                        "name":"backup2",
+                        "device_id": "sdc1"
+                    }
+                ]
+            },
+            "type": "check",
+            "read_data": false,
+            "period": {
+                "period_type": "weeks",
+                "frequency": 4,
+                "run_time": "02:00",
+                "weekday": "sunday" 
+            }
+        },
+        "media_read_data_check":{
+            "repo": "media",
+            "root": "<root source directory>",
+            "pw_file": "<path to restic password file>",
+            "repo_roots": {
+                "local_devices": [
+                    {
+                        "name":"backup1",
+                        "device_id": "sdb1",
+                        "primary": true
+                    },
+                    {
+                        "name":"backup2",
+                        "device_id": "sdc1"
+                    }
+                ]
+            },
+            "type": "check",
+            "read_data": true,
+            "subset": "2.5%",
+            "period": {
+                "period_type": "weeks",
+                "frequency": 4,
+                "run_time": "02:00",
+                "weekday": "sunday" 
             }
         }
     }

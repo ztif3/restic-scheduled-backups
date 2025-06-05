@@ -1,110 +1,38 @@
 #!/usr/bin/env python3
-import argparse
-from enum import Enum
 import logging
 
+from multiprocessing import Queue
 from os import PathLike
 from pathlib import Path
+from typing import Optional
 
-import schedule
 
+from restic_scheduled_backups.tasks.task_base import TaskBase
 from restic_scheduled_backups.util import ntfy
 from restic_scheduled_backups.util.backup import clean_repo, copy_repo, data_backup, init_repo, unlock_repo
-from restic_scheduled_backups.config_def import *
-from restic_scheduled_backups.util.containers import start_container, stop_container
+from restic_scheduled_backups.config_def import BackupTaskConfig, LocalDeviceConfig, CloudRepoConfig, NtfyConfig
 from restic_scheduled_backups.util.ntfy import NtfyPriorityLevel, ntfy_message
 from restic_scheduled_backups.util.system import *
-
-from restic_scheduled_backups.tasks import task_queue
 
 import restic_scheduled_backups.common
 
 logger = logging.getLogger(__name__)
 
-class BackupTask:
-    def __init__(self,
-                 name: str,
-                 repo_roots: RepoConfig,
-                 repo_name: str,
-                 root_dir: PathLike,
-                 pw_file: PathLike,
-                 paths: list[str],
-                 update_period: PeriodConfig = PeriodConfig(type=PeriodType.DAILY),
-                 retention_period: RetentionConfig = RetentionConfig(),
-                 task_type: BackupType = BackupType.STANDARD,
-                 no_cloud: bool = False,
-                 ntfy_config: Optional[NtfyConfig] = None,
-    ):
+class BackupTask(TaskBase):
+    def __init__(self, name: str, task_config: BackupTaskConfig, task_queue:Queue, no_cloud: bool=False, ntfy_config: Optional[NtfyConfig] = None):
         """ Constructor
 
         Args:
-            name (str): name of the task
-            repo_roots  (RepoConfig): root directories for the various repositories
-            repo_name (str): name of the repository
-            root_dir (PathLike): root directory for the data to be backed up
-            pw_file (PathLike): path to the password file 
-            paths (list[str]): list of child paths to be backed up
-            update_period (UpdatePeriod, optional): update period for the data to be backed up. Defaults to UpdatePeriod(UpdatePeriod.Type.DAILY).
-            retention_period (RetentionPeriod, optional): retention period for the data to be backed up. Defaults to RetentionPeriod().
-            cloud_repos (list[CloudDevice], optional): list of cloud repo roots. Defaults to [].
-            task_type (BackupType, optional): type of the backup task. Defaults to BackupType.STANDARD.
+            name (str): name of the task.
+            task_config (BackupTaskConfig): configuration for the task.
             no_cloud (bool, optional): whether to slip the cloud backup. Defaults to False.
+            ntfy_config (Optional[NtfyConfig], optional): configuration for notifications. Defaults to None.
         """
-
-        if not isinstance(root_dir, Path):
-            root_dir = Path(root_dir)
-
-        if not isinstance(pw_file, Path):
-            pw_file = Path(pw_file)
-        
-        self.name = name
-        self.repo_roots = repo_roots
-        self.repo_name = repo_name
-        self.root_dir = root_dir
-        self.pw_file = pw_file
-        self.paths = paths
-        self.update_period = update_period
-        self.retention_period = retention_period
-        self.task_type = task_type
+        super().__init__(name, task_config, task_queue, ntfy_config)
+        self.paths = task_config.paths
+        self.retention_period = task_config.retention
         self.no_cloud = no_cloud
-        self.ntfy_config = ntfy_config
 
-        self.scheduled = False
-
-
-    def schedule(self) -> None:
-        logger.info(f'Scheduling task: {self.name} - {self.update_period.type} - freq:{self.update_period.frequency} - at:{self.update_period.run_time}')
-        # Queue task
-        match(self.update_period.type):
-            case PeriodType.HOURLY:
-                schedule.every(self.update_period.frequency).hours.do(self.__queue_task)
-            case PeriodType.DAILY:
-                schedule.every(self.update_period.frequency).days.at(self.update_period.run_time).do(self.__queue_task) 
-            case PeriodType.WEEKLY:
-                match(self.update_period.weekday):
-                    case WeekdayType.SUNDAY:
-                        schedule.every(self.update_period.frequency).sunday.at(self.update_period.run_time).do(self.__queue_task)
-                    case WeekdayType.MONDAY:
-                        schedule.every(self.update_period.frequency).monday.at(self.update_period.run_time).do(self.__queue_task)
-                    case WeekdayType.TUESDAY:
-                        schedule.every(self.update_period.frequency).tuesday.at(self.update_period.run_time).do(self.__queue_task)
-                    case WeekdayType.WEDNESDAY:
-                        schedule.every(self.update_period.frequency).wednesday.at(self.update_period.run_time).do(self.__queue_task)
-                    case WeekdayType.THURSDAY:
-                        schedule.every(self.update_period.frequency).thursday.at(self.update_period.run_time).do(self.__queue_task)
-                    case WeekdayType.FRIDAY:
-                        schedule.every(self.update_period.frequency).friday.at(self.update_period.run_time).do(self.__queue_task)
-                    case WeekdayType.SATURDAY:
-                        schedule.every(self.update_period.frequency).saturday.at(self.update_period.run_time).do(self.__queue_task) 
-                    case _:
-                        schedule.every(self.update_period.frequency).weeks.at(self.update_period.run_time).do(self.__queue_task)
-        
-    def __queue_task(self):
-        """ Schedule the task """
-        if not self.scheduled:
-            task_queue.put(self)
-            logging.info(f'queued task: {self.name}')
-            self.scheduled = True
 
     def run(self):
         """ Run the task """
@@ -185,28 +113,7 @@ class BackupTask:
                 unlock_repo(primary_repo_path, self.pw_file)  
 
                 # Backup data
-                match(self.task_type):
-                    case BackupType.STANDARD:
-                        msgs.extend(data_backup(primary_repo_path, self.pw_file, [self.root_dir / p for p in self.paths]))
-                    case BackupType.DOCKER_COMPOSE:
-                        for path in self.paths:
-                            # Generate path to the data source
-                            src_path = self.root_dir / path
-
-                            # If container task type, stop container before running backup
-                            try:
-                                stop_container(src_path)
-                            except subprocess.CalledProcessError as e:
-                                logger.exception(f'Error while stopping container at path {src_path}')
-                        
-                            # Run backup to primary repo
-                            msgs.extend(data_backup(primary_repo_path, self.pw_file, [src_path]))
-
-                            # If container task type, start container after running backup
-                            try:
-                                start_container(src_path)
-                            except subprocess.CalledProcessError as e:
-                                logger.exception(f'Error while starting container at path {src_path}')
+                msgs.extend(self.source_backup(primary_repo_path))
                     
                 # Clean primary repo
                 msgs.extend(
@@ -340,3 +247,16 @@ class BackupTask:
                 prefix = ("An Error", "Errors")[len(msgs) > 1]
                 
                 ntfy.ntfy_message(self.ntfy_config, f'[{prefix}] while running backup task {self.name} - {repo_path}', '\n'.join(msgs), NtfyPriorityLevel.HIGH)
+
+
+    def source_backup(self, primary_repo_path: Path) -> list[str]:
+        """
+        Perform a backup of the source directories to the primary repo.
+
+        Args:
+            primary_repo_path (Path): The path to the primary repository.
+
+        Returns:
+            list[str]: A list of messages generated during the backup process.
+        """
+        return data_backup(primary_repo_path, self.pw_file, [Path(self.root_dir) / p for p in self.paths])

@@ -11,7 +11,8 @@ from pydantic import ValidationError
 import schedule
 
 from restic_scheduled_backups.config_def import *
-from restic_scheduled_backups.tasks import create_tasks, task_queue
+from restic_scheduled_backups.tasks import create_tasks
+from restic_scheduled_backups.tasks.task_base import task_queue
 from restic_scheduled_backups.tasks.container_backup_task import DCBackupTask
 from restic_scheduled_backups.util.ntfy import NtfyPriorityLevel, ntfy_message
 from restic_scheduled_backups.util.system import *

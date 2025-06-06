@@ -11,8 +11,6 @@ import restic_scheduled_backups.common
 
 logger = logging.getLogger(__name__)
 
-task_queue = Queue()
-
 def create_tasks(config: BackupConfig, no_cloud: bool = False) -> list[TaskBase]:
     """ Get list of backup tasks from config dictionary
 

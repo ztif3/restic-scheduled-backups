@@ -6,11 +6,12 @@ from multiprocessing import Queue
 
 import schedule
 
-from restic_scheduled_backups.tasks import task_queue
 from restic_scheduled_backups.config_def import *
 from restic_scheduled_backups.util.system import *
 
 import restic_scheduled_backups.common
+
+task_queue = Queue() 
 
 logger = logging.getLogger(__name__)
 

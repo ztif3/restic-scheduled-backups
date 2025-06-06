@@ -130,6 +130,12 @@ def main():
                         # run scheduler
                         while True:
                             schedule.run_pending()
+
+                            # Restart task queue worker if it has died
+                            if not task_queue_worker.is_alive():
+                                logger.warning('Task queue worker process has died. Restarting...')
+                                task_queue_worker.start()
+
                             time.sleep(1)
         else:
             logger.error(f'Config file "{config_path}" does not exist.')

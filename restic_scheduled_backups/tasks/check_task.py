@@ -1,5 +1,4 @@
 import logging
-from multiprocessing import Queue
 from pathlib import Path
 from typing import Optional
 from restic_scheduled_backups.config_def import CheckTaskConfig
@@ -14,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class CheckTask(TaskBase):
-    def __init__(self, name: str, task_config: CheckTaskConfig, task_queue: Queue, ntfy_config: Optional[ntfy.NtfyConfig]=None):
-        super().__init__(name, task_config, task_queue, ntfy_config)
+    def __init__(self, name: str, task_config: CheckTaskConfig, ntfy_config: Optional[ntfy.NtfyConfig]=None):
+        super().__init__(name, task_config, ntfy_config)
         self.read_data = task_config.read_data
         self.subset = task_config.subset
 

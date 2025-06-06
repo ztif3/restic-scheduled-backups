@@ -11,7 +11,7 @@ from pydantic import ValidationError
 import schedule
 
 from restic_scheduled_backups.config_def import *
-from restic_scheduled_backups.tasks import create_tasks
+from restic_scheduled_backups.tasks import create_tasks, task_queue
 from restic_scheduled_backups.tasks.container_backup_task import DCBackupTask
 from restic_scheduled_backups.util.ntfy import NtfyPriorityLevel, ntfy_message
 from restic_scheduled_backups.util.system import *
@@ -20,7 +20,7 @@ from restic_scheduled_backups.tasks.backup_task import BackupTask
 from pprint import pformat
 
 
-def _run_backups(task_queue: Queue):
+def _run_backups():
     """ Run backups for each task
     Args:
         tasks (list[BackupTask]): list of backup tasks
@@ -40,8 +40,7 @@ def _run_backups(task_queue: Queue):
     logger.critical('Worker process completed')
 
 
-task_queue = Queue()
-task_queue_worker = Process(target=_run_backups, args=(task_queue,))
+task_queue_worker = Process(target=_run_backups)
 
 import restic_scheduled_backups.common
 
@@ -96,7 +95,7 @@ def main():
                 if not args.validate:
                     # Get backup tasks based on the configuration
                     try:
-                        tasks = create_tasks(config, task_queue, args.no_cloud)
+                        tasks = create_tasks(config, args.no_cloud)
                     except:
                         logger.exception(f'Failed to create backup tasks')
 

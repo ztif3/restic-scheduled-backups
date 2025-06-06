@@ -11,7 +11,9 @@ import restic_scheduled_backups.common
 
 logger = logging.getLogger(__name__)
 
-def create_tasks(config: BackupConfig, task_queue: Queue, no_cloud: bool = False) -> list[TaskBase]:
+task_queue = Queue()
+
+def create_tasks(config: BackupConfig, no_cloud: bool = False) -> list[TaskBase]:
     """ Get list of backup tasks from config dictionary
 
     Args:
@@ -31,7 +33,6 @@ def create_tasks(config: BackupConfig, task_queue: Queue, no_cloud: bool = False
                 task = BackupTask(
                     name=name,
                     task_config = task_config, # type: ignore
-                    task_queue = task_queue,
                     no_cloud=no_cloud,
                     ntfy_config=config.ntfy
                 )
@@ -39,7 +40,6 @@ def create_tasks(config: BackupConfig, task_queue: Queue, no_cloud: bool = False
                 task = DCBackupTask(
                     name=name,
                     task_config = task_config, # type: ignore
-                    task_queue = task_queue,
                     no_cloud=no_cloud,
                     ntfy_config=config.ntfy
                 )
@@ -47,7 +47,6 @@ def create_tasks(config: BackupConfig, task_queue: Queue, no_cloud: bool = False
                 task = CheckTask(
                     name=name,
                     task_config = task_config, # type: ignore
-                    task_queue = task_queue,
                     ntfy_config=config.ntfy
                 )
             case _:

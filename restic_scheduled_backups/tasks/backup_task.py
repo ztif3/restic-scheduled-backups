@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import logging
 
-from multiprocessing import Queue
 from os import PathLike
 from pathlib import Path
 from typing import Optional
@@ -19,7 +18,7 @@ import restic_scheduled_backups.common
 logger = logging.getLogger(__name__)
 
 class BackupTask(TaskBase):
-    def __init__(self, name: str, task_config: BackupTaskConfig, task_queue:Queue, no_cloud: bool=False, ntfy_config: Optional[NtfyConfig] = None):
+    def __init__(self, name: str, task_config: BackupTaskConfig, no_cloud: bool=False, ntfy_config: Optional[NtfyConfig] = None):
         """ Constructor
 
         Args:
@@ -28,7 +27,7 @@ class BackupTask(TaskBase):
             no_cloud (bool, optional): whether to slip the cloud backup. Defaults to False.
             ntfy_config (Optional[NtfyConfig], optional): configuration for notifications. Defaults to None.
         """
-        super().__init__(name, task_config, task_queue, ntfy_config)
+        super().__init__(name, task_config, ntfy_config)
         self.paths = task_config.paths
         self.retention_period = task_config.retention
         self.no_cloud = no_cloud

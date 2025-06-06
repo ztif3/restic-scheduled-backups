@@ -6,6 +6,7 @@ from multiprocessing import Queue
 
 import schedule
 
+from restic_scheduled_backups.tasks import task_queue
 from restic_scheduled_backups.config_def import *
 from restic_scheduled_backups.util.system import *
 
@@ -17,7 +18,6 @@ class TaskBase(ABC):
     def __init__(self,
                  name: str,
                  task_config: TaskConfig,
-                 task_queue: Queue,
                  ntfy_config: Optional[NtfyConfig] = None,
     ):
         """ Constructor
@@ -25,7 +25,6 @@ class TaskBase(ABC):
         Args:
             name (str): name of the task.
             task_config (TaskConfig): configuration for the task.
-            task_queue (Queue): queue for tasks.
             ntfy_config (Optional[NtfyConfig], optional): configuration for notifications. Defaults to None.
         """
 
@@ -35,7 +34,6 @@ class TaskBase(ABC):
         self.root_dir = task_config.root
         self.pw_file = task_config.pw_file
         self.update_period = task_config.period
-        self.task_queue = task_queue
         self.ntfy_config = ntfy_config
 
         self.skip_count = 0
@@ -73,7 +71,7 @@ class TaskBase(ABC):
     def __queue_task(self):
         """ Schedule the task """
         if not self.scheduled:
-            self.task_queue.put(self)
+            task_queue.put(self)
             logging.info(f'queued task: {self.name}')
             self.scheduled = True
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import logging
 
-from multiprocessing import Queue
 from pathlib import Path
 from typing import Optional
 
@@ -18,7 +17,7 @@ logger = logging.getLogger(__name__)
 class DCBackupTask(BackupTask):
     """ Backup task that backs up a docker compose container's filesystem """
 
-    def __init__(self, name: str, task_config: BackupTaskConfig, task_queue:Queue, no_cloud: bool=False, ntfy_config: Optional[NtfyConfig] = None):
+    def __init__(self, name: str, task_config: BackupTaskConfig, no_cloud: bool=False, ntfy_config: Optional[NtfyConfig] = None):
         """ Constructor
 
         Args:
@@ -27,7 +26,7 @@ class DCBackupTask(BackupTask):
             no_cloud (bool, optional): whether to slip the cloud backup. Defaults to False.
             ntfy_config (Optional[NtfyConfig], optional): configuration for notifications. Defaults to None.
         """
-        super().__init__(name, task_config, task_queue, no_cloud, ntfy_config)
+        super().__init__(name, task_config, no_cloud, ntfy_config)
 
 
     def source_backup(self, primary_repo_path: Path) -> list[str]:

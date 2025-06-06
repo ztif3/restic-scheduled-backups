@@ -1,7 +1,3 @@
-
-
-
-
 import logging
 from multiprocessing import Queue
 from pathlib import Path

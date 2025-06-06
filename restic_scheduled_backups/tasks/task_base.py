@@ -1,20 +1,12 @@
 #!/usr/bin/env python3
 from abc import ABC, abstractmethod
-import argparse
-from enum import Enum
 import logging
 
 from multiprocessing import Queue
-from os import PathLike
-from pathlib import Path
 
 import schedule
 
-from restic_scheduled_backups.util import ntfy
-from restic_scheduled_backups.util.backup import clean_repo, copy_repo, data_backup, init_repo, unlock_repo
 from restic_scheduled_backups.config_def import *
-from restic_scheduled_backups.util.containers import start_container, stop_container
-from restic_scheduled_backups.util.ntfy import NtfyPriorityLevel, ntfy_message
 from restic_scheduled_backups.util.system import *
 
 import restic_scheduled_backups.common

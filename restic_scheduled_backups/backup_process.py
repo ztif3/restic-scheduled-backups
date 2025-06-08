@@ -36,7 +36,7 @@ def _run_backups():
             break
         else:
             logger.info(f'Running task {task.name}')
-            task.run_base()
+            task.start_task()
 
     logger.critical('Worker process completed')
 

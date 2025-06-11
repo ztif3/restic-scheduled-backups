@@ -79,7 +79,7 @@ class TaskBase(ABC):
     def start_task(self):
         """ Handles running tasks """
 
-        if (self.update_period.type != PeriodType.WEEKLY and self.update_period.weekday is not None) or self.skip_count > self.update_period.frequency - 1:
+        if self.update_period.type != PeriodType.WEEKLY or self.update_period.weekday is None or self.skip_count > self.update_period.frequency - 1:
             self.skip_count = 0
             logger.info(f'Starting task: {self.name}')
             self.run()

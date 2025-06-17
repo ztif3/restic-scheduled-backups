@@ -88,7 +88,7 @@ class TaskBase(ABC):
             logger.info(f'Skipping task: {self.name} due to frequency or weekday settings. Skipping count: {self.skip_count} of {self.update_period.frequency - 1}')
             self.skip_count += 1
 
-
+        self.scheduled = False
 
     @abstractmethod
     def run(self):

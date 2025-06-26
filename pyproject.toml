@@ -19,6 +19,7 @@ requires = [
 build-backend = "hatchling.build"
 
 [project]
+dynamic = ['version']
 name = "restic_scheduled_backups"
 dependencies = [
     "annotated-types==0.7.0",
@@ -36,7 +37,6 @@ dependencies = [
     "urllib3==2.4.0",
     "wheel==0.45.1"
 ]
-version = "0.1.1"
 authors = [
     { name="Ryan Fitz-Gerald", email="ztif33@gmail.com" }
 ]

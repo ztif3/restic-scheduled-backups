@@ -75,6 +75,8 @@ class TaskBase(ABC):
             task_queue.put(self)
             logging.info(f'queued task: {self.name}')
             self.scheduled = True
+        else:
+            logging.warning(f'Attempted to queue already scheduled task: {self.name}')
 
     def start_task(self):
         """ Handles running tasks """
@@ -83,6 +85,7 @@ class TaskBase(ABC):
             self.skip_count = 0
             logger.info(f'Starting task: {self.name}')
             self.run()
+            logger.info(f'Task Complete: {self.name}')
 
         else:
             logger.info(f'Skipping task: {self.name} due to frequency or weekday settings. Skipping count: {self.skip_count} of {self.update_period.frequency - 1}')

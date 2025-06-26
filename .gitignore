@@ -6,3 +6,4 @@ log.*
 config.json
 config copy.json
 .vscode
+*.egg-info

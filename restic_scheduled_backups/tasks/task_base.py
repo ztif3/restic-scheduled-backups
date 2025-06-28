@@ -2,7 +2,7 @@
 from abc import ABC, abstractmethod
 import logging
 
-from multiprocessing import Queue
+from multiprocessing import Queue, Event
 
 import schedule
 
@@ -39,7 +39,7 @@ class TaskBase(ABC):
 
         self.skip_count = 0
 
-        self.scheduled = False
+        self.task_queued = Event()
 
 
     def schedule(self) -> None:
@@ -71,10 +71,15 @@ class TaskBase(ABC):
         
     def __queue_task(self):
         """ Schedule the task """
-        if not self.scheduled:
-            task_queue.put(self)
-            logging.info(f'queued task: {self.name}')
-            self.scheduled = True
+        
+        if not self.task_queued.is_set():
+            try:
+                self.task_queued.set()
+                task_queue.put(self)
+                logging.info(f'queued task: {self.name}')
+            except:
+                logging.error(f'Failed to queue task {self.name}')
+                self.task_queued.clear()
         else:
             logging.warning(f'Attempted to queue already scheduled task: {self.name}')
 
@@ -91,10 +96,11 @@ class TaskBase(ABC):
             logger.info(f'Skipping task: {self.name} due to frequency or weekday settings. Skipping count: {self.skip_count} of {self.update_period.frequency - 1}')
             self.skip_count += 1
 
-        self.scheduled = False
+        self.task_queued.clear()
 
     @abstractmethod
     def run(self):
         """ Run the task """
         logger.warning(f'Task {self.name} has no implementation for run() method. This should be overridden by subclasses.')
+
         

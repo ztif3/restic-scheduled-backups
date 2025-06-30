@@ -2,7 +2,8 @@
 from abc import ABC, abstractmethod
 import logging
 
-from multiprocessing import Queue, Event
+from threading import Event
+from queue import Queue
 
 import schedule
 

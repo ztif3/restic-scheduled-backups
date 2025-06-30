@@ -4,7 +4,7 @@ import argparse
 import logging
 
 from pathlib import Path
-from multiprocessing import Process, Queue
+from threading import Thread
 
 import time
 from pydantic import ValidationError
@@ -41,7 +41,7 @@ def _run_backups():
     logger.critical('Worker process completed')
 
 
-task_queue_worker = Process(target=_run_backups)
+task_queue_worker = Thread(target=_run_backups)
 
 import restic_scheduled_backups.common
 

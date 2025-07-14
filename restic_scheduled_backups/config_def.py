@@ -9,6 +9,7 @@ class PeriodType(str, Enum):
     HOURLY = 'hourly'
     DAILY = 'daily'
     WEEKLY = 'weekly'
+    MONTHLY = 'monthly'
 
 
 class WeekdayType(str, Enum):
@@ -38,11 +39,12 @@ class PeriodConfig(BaseModel):
     frequency: int = 1
     run_time: str = "00:00"
     weekday: Optional[WeekdayType] = None
+    day:int = 1
 
     @field_validator("type", mode="before")
     @classmethod
     def transform(cls, raw: str) -> PeriodType:
-        return PeriodType(raw.lower())
+        return PeriodType(raw.lower())   
 
 
 class LocalDeviceConfig(BaseModel):

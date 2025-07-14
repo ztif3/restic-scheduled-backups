@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from abc import ABC, abstractmethod
 import logging
+from datetime import date
 
 from threading import Event
 from queue import Queue
@@ -44,17 +45,22 @@ class TaskBase(ABC):
         self.task_queued = Event()
 
     def schedule(self) -> None:
-        logger.info(
-            f'Scheduling task: {self.name} - {self.update_period.type} - freq:{self.update_period.frequency} - at:{self.update_period.run_time}')
+
         # Queue task
         match(self.update_period.type):
-            case PeriodType.HOURLY:
+            case PeriodType.HOURLY:        
+                logger.info(
+                    f'Scheduling task: {self.name} - {self.update_period.type} - freq:{self.update_period.frequency} - at:{self.update_period.run_time}')
                 schedule.every(self.update_period.frequency).hours.do(
                     self.__queue_task)
             case PeriodType.DAILY:
+                logger.info(
+                    f'Scheduling task: {self.name} - {self.update_period.type} - freq:{self.update_period.frequency} - at:{self.update_period.run_time}')
                 schedule.every(self.update_period.frequency).days.at(
                     self.update_period.run_time).do(self.__queue_task)
             case PeriodType.WEEKLY:
+                logger.info(
+                    f'Scheduling task: {self.name} - {self.update_period.type} - freq:{self.update_period.frequency} - at:{self.update_period.run_time} - day: {self.update_period.weekday}')
                 match(self.update_period.weekday):
                     case WeekdayType.SUNDAY:
                         schedule.every().sunday.at(self.update_period.run_time).do(self.__queue_task)
@@ -72,14 +78,21 @@ class TaskBase(ABC):
                         schedule.every().saturday.at(self.update_period.run_time).do(self.__queue_task)
                     case _:
                         schedule.every().weeks.at(self.update_period.run_time).do(self.__queue_task)
+            case PeriodType.MONTHLY:
+                logger.info(
+                    f'Scheduling task: {self.name} - {self.update_period.type} - freq:{self.update_period.frequency} - at:{self.update_period.run_time} - day: {self.update_period.day}')
+                schedule.every(1).days.at(
+                    self.update_period.run_time).do(self.__queue_task)
 
     def __queue_task(self):
         """ Schedule the task """
 
         if not self.task_queued.is_set():
-            skipped = self.update_period.type != PeriodType.WEEKLY or self.update_period.weekday is None or self.skip_count >= self.update_period.frequency - 1
+            task_ready = self.update_period.type != PeriodType.WEEKLY and self.update_period != PeriodType.MONTHLY
+            task_ready = task_ready or self.update_period.type == PeriodType.WEEKLY and (self.update_period.weekday is None or self.skip_count >= self.update_period.frequency - 1)
+            task_ready = task_ready or self.update_period.type == PeriodType.MONTHLY and date.today().day == self.update_period.day
 
-            if skipped:
+            if task_ready:
                 self.skip_count = 0
 
                 try:

@@ -102,6 +102,7 @@ class TaskConfig(BaseModel):
     type: TaskType
     period: PeriodConfig
     repo_roots: RepoConfig
+    stop_container: bool = True
 
 
 class BackupTaskConfig(TaskConfig):
@@ -144,7 +145,8 @@ class BackupConfig(BaseModel):
                         if 'repo_roots' in defaults:
                             task['repo_roots'] = defaults['repo_roots']
                         else:
-                            raise ValueError(f"Repository roots must be specified for task '{key}'")
+                            raise ValueError(
+                                f"Repository roots must be specified for task '{key}'")
 
                     if 'type' in task and (task['type'] == 'data-backup' or task['type'] == 'docker-compose-backup') and 'retention' not in task:
                         if 'retention' in defaults:
@@ -159,9 +161,11 @@ class BackupConfig(BaseModel):
     def check_type_config(self):
         for key, task in self.tasks.items():
             if isinstance(task, CheckTaskConfig) and task.type != TaskType.CHECK:
-                raise ValueError(f"task '{key}' has a check configuration but type is not 'check'")
-            
+                raise ValueError(
+                    f"task '{key}' has a check configuration but type is not 'check'")
+
             if isinstance(task, BackupTaskConfig) and task.type != TaskType.DATA_BACKUP and task.type != TaskType.DOCKER_COMPOSE_BACKUP:
-                raise ValueError(f"task '{key}' has a backup configuration but type is not 'data-backup' or 'docker-compose-backup'")
+                raise ValueError(
+                    f"task '{key}' has a backup configuration but type is not 'data-backup' or 'docker-compose-backup'")
 
         return self

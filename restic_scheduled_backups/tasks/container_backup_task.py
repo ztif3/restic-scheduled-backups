@@ -27,6 +27,7 @@ class DCBackupTask(BackupTask):
             ntfy_config (Optional[NtfyConfig], optional): configuration for notifications. Defaults to None.
         """
         super().__init__(name, task_config, no_cloud, ntfy_config)
+        self.stop_container = task_config.stop_container
 
 
     def source_backup(self, primary_repo_path: Path) -> list[str]:
@@ -47,18 +48,20 @@ class DCBackupTask(BackupTask):
             src_path = Path(self.root_dir) / path
 
             # If container task type, stop container before running backup
-            try:
-                stop_container(src_path)
-            except subprocess.CalledProcessError as e:
-                logger.exception(f'Error while stopping container at path {src_path}')
+            if self.stop_container:
+                try:
+                    stop_container(src_path)
+                except subprocess.CalledProcessError as e:
+                    logger.exception(f'Error while stopping container at path {src_path}')
         
             # Run backup to primary repo
             msgs.extend(data_backup(primary_repo_path, self.pw_file, [src_path]))
 
             # If container task type, start container after running backup
-            try:
-                start_container(src_path)
-            except subprocess.CalledProcessError as e:
-                logger.exception(f'Error while starting container at path {src_path}')
+            if self.stop_container:
+                try:
+                    start_container(src_path)
+                except subprocess.CalledProcessError as e:
+                    logger.exception(f'Error while starting container at path {src_path}')
 
         return msgs

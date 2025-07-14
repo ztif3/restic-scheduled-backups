@@ -77,7 +77,7 @@ class TaskBase(ABC):
         """ Schedule the task """
 
         if not self.task_queued.is_set():
-            skipped = self.update_period.type != PeriodType.WEEKLY or self.update_period.weekday is None or self.skip_count > self.update_period.frequency - 1
+            skipped = self.update_period.type != PeriodType.WEEKLY or self.update_period.weekday is None or self.skip_count >= self.update_period.frequency - 1
 
             if skipped:
                 self.skip_count = 0

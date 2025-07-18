@@ -88,11 +88,8 @@ class TaskBase(ABC):
         """ Schedule the task """
 
         if not self.task_queued.is_set():
-            task_ready = self.update_period.type != PeriodType.WEEKLY and self.update_period != PeriodType.MONTHLY
-            task_ready = task_ready or self.update_period.type == PeriodType.WEEKLY and (self.update_period.weekday is None or self.skip_count >= self.update_period.frequency - 1)
-            task_ready = task_ready or self.update_period.type == PeriodType.MONTHLY and date.today().day == self.update_period.day
 
-            if task_ready:
+            if self.__task_ready():
                 self.skip_count = 0
 
                 try:
@@ -102,14 +99,56 @@ class TaskBase(ABC):
                 except:
                     logging.error(f'Failed to queue task {self.name}')
                     self.task_queued.clear()
-            else:
-                self.skip_count += 1
-                logger.info(
-                    f'Skipping task: {self.name} due to frequency or weekday settings. Skipping count: {self.skip_count} of {self.update_period.frequency}')
 
         else:
             logging.warning(
                 f'Attempted to queue already scheduled task: {self.name}')
+            
+    def __task_ready(self) -> bool:
+        """ Checks if a task is ready to run
+
+        Returns:
+            bool: True if a task is ready to run, False otherwise
+        """
+        cur_day = date.today().day
+        task_ready = False
+        if self.update_period == PeriodType.HOURLY:
+            if self.skip_count >= self.update_period.frequency - 1:
+                logger.debug(f'Queueing task {self.name} since it is Hourly and skip count:{self.skip_count} >= frequency:{self.update_period.frequency - 1}')
+                task_ready = True
+            else:
+                logger.debug(f'Skipped task {self.name} since it is Hourly and skip count {self.skip_count} < frequency:{self.update_period.frequency - 1}')
+                self.skip_count += 1
+        elif self.update_period.type == PeriodType.DAILY:
+            if self.skip_count >= self.update_period.frequency - 1:
+                logger.debug(f'Queueing task {self.name} since it is Daily and skip count:{self.skip_count} >= frequency:{self.update_period.frequency - 1}')
+                task_ready = True
+            else:
+                logger.debug(f'Skipped task {self.name} since it is Daily and skip count {self.skip_count} < frequency:{self.update_period.frequency - 1}')
+                self.skip_count += 1
+        elif self.update_period.type == PeriodType.WEEKLY:
+            if self.update_period.weekday is not None:
+                logger.debug(f'Queueing task {self.name} since it is Weekly and weekday is set to {self.update_period.weekday}')
+                task_ready = True
+            else:
+                if self.skip_count >= self.update_period.frequency - 1:
+                    logger.debug(f'Queueing task {self.name} since it is Weekly and skip count:{self.skip_count} >= frequency:{self.update_period.frequency - 1}')
+                    task_ready = True
+                else:
+                    logger.debug(f'Skipped task {self.name} since it is Weekly and skip count {self.skip_count} < frequency:{self.update_period.frequency - 1} and weekday is not set')
+                    self.skip_count += 1
+        elif self.update_period.type == PeriodType.MONTHLY:
+            if cur_day == self.update_period.day:
+                if self.skip_count >= self.update_period.frequency - 1:
+                    logger.debug(f'Queueing task {self.name} since it is Monthly and day:{self.update_period.day} != today:{cur_day} and skip count:{self.skip_count} >= frequency:{self.update_period.frequency - 1}')
+                    task_ready = True
+                else:
+                    logger.debug(f'Skipped task {self.name} since it is Monthly and day:{self.update_period.day} != today:{cur_day} but skip count {self.skip_count} < frequency:{self.update_period.frequency - 1}')
+                    self.skip_count += 1
+            else:
+                logger.debug(f'Skipped task {self.name} since it is Monthly and day:{self.update_period.day} != today:{cur_day}')
+
+        return task_ready
 
     def start_task(self):
         """ Handles running tasks """

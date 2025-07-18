@@ -69,7 +69,7 @@ def init_repo(repo: PathLike|str, pw_file: PathLike) -> list[str]:
             logger.warning(f'Repo {repo} created.')
             logger.debug(f'Init result for {repo}\n{result}')
     else:
-        logger.info(f'Repo {repo} already exists.')
+        logger.debug(f'Repo {repo} already exists.')
 
     return msgs
     

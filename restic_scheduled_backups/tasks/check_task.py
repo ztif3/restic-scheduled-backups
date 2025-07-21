@@ -36,9 +36,6 @@ class CheckTask(TaskBase):
 
                         logger.error(f'[{prefix}] while running read data check task  {self.name} - {repo_path}\n{"\n".join(msgs)}')
                         ntfy.ntfy_message(self.ntfy_config, f'[{prefix}] while running read data check task  {self.name} - {repo_path}', '\n'.join(msgs), ntfy.NtfyPriorityLevel.HIGH)
-                    else:
-                        logger.info(f'Read data check task {self.name} - {repo_path} completed successfully')
-                        ntfy.ntfy_message(self.ntfy_config, f'Read data check task {self.name} - {repo_path} completed successfully', '', ntfy.NtfyPriorityLevel.LOW)
             else:
                 msg = f"Local repo device {repo_root.device_id} has no mount points"
                 logger.error(msg)
@@ -58,5 +55,14 @@ class CheckTask(TaskBase):
                         prefix = ("An Error", "Errors")[len(msgs) > 1]
                         
                         ntfy.ntfy_message(self.ntfy_config, f'[{prefix}] while running read data check task  {self.name} - {repo_path}', '\n'.join(msgs), ntfy.NtfyPriorityLevel.HIGH)
+
+        # Log task complete
+        logger.info(f'Read data check task {self.name} completed')
+        if self.ntfy_config is not None:
+            ntfy.ntfy_message(self.ntfy_config, f'Read data check task {self.name} - completed successfully', '', ntfy.NtfyPriorityLevel.LOW)
+
+        
+
+            
                 
 

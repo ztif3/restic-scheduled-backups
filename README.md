@@ -13,7 +13,7 @@ Python module for running scheduled backups using Restic
 ## Prerequisites
 - Python 3 (tested on Python 3.12)
 - Restic installed on the system
-- Docker and Docker Compose installed if stopping containers is enabled
+- Docker and Docker Compose (docker-compose-plugin) installed if stopping containers is enabled
 - Instructions assume you are using a linux distribution using systemd
 
 ## Installation & Setup

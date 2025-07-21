@@ -17,7 +17,7 @@ def stop_container(container:PathLike):
 
     logger.info(f'Stopping container {container}...')
     try:
-        output=subprocess.run(['docker-compose', 'down'], capture_output=True, cwd=container)
+        output=subprocess.run(['docker compose', 'down'], capture_output=True, cwd=container)
         logger.info(f'Container {container} stopped. {output.stdout.decode()}')
     except subprocess.CalledProcessError as e:
         logger.error(f'Failed to stop container {container}: {e}')
@@ -39,7 +39,7 @@ def start_container(container:PathLike):
 
     logger.info(f'Starting container {container}...')
     try:
-        output = subprocess.run(['docker-compose', 'up', '-d'], check=True, capture_output=True, cwd=container)
+        output = subprocess.run(['docker compose', 'up', '-d'], check=True, capture_output=True, cwd=container)
         logger.info(f'Container {container} started. {output.stdout.decode()}')
     except subprocess.CalledProcessError as e:
         logger.error(f'Failed to start container {container}: {e}')
